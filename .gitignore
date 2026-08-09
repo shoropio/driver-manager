@@ -1,0 +1,11 @@
+# Build outputs
+bin/
+obj/
+*.user
+
+# Rider/VS
+.idea/
+.vs/
+
+# Runtime
+*.log
