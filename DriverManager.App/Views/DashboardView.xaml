@@ -1,0 +1,96 @@
+<UserControl x:Class="DriverManager.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:DriverManager.App.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+             mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock FontSize="24" FontWeight="Bold" Text="Panel principal" />
+            <TextBlock Margin="0,6,0,0" FontSize="13" Foreground="#FFA9ABBE"
+                       Text="Bienvenido a Driver Manager. Escanea tus controladores, busca actualizaciones y protege tu equipo con respaldos." />
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,24,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock FontSize="40" FontWeight="Bold"
+                               Text="{Binding Drivers.Count, StringFormat={}{0}}" />
+                    <TextBlock FontSize="13" Foreground="#FFA9ABBE" Text="Controladores instalados" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock FontSize="40" FontWeight="Bold" Foreground="#FFFFB454"
+                               Text="{Binding OutdatedDriversCount}" />
+                    <TextBlock FontSize="13" Foreground="#FFA9ABBE" Text="Actualizaciones disponibles" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock FontSize="40" FontWeight="Bold" Foreground="#FFFF6B6B"
+                               Text="{Binding AttentionCount}" />
+                    <TextBlock FontSize="13" Foreground="#FFA9ABBE" Text="Con problemas" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,24,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock FontSize="16" FontWeight="Bold" Text="Acciones rápidas" />
+                    <TextBlock Margin="0,4,0,16" FontSize="12" Foreground="#FFA9ABBE"
+                               Text="{Binding LatestBackup, StringFormat=Último respaldo: {0}}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource ActionButtonStyle}" Content="Escanear controladores"
+                                Command="{Binding ScanDriversCommand}" />
+                        <Button Margin="12,0,0,0" Style="{StaticResource ActionButtonStyle}" Content="Buscar actualizaciones"
+                                Command="{Binding CheckUpdatesCommand}" />
+                    </StackPanel>
+                    <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                        <Button Style="{StaticResource ActionButtonStyle}" Content="Crear respaldo"
+                                Command="{Binding CreateBackupCommand}" />
+                        <Button Margin="12,0,0,0" Style="{StaticResource ActionButtonStyle}" Content="Crear punto de restauración"
+                                Command="{Binding CreateRestorePointCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock FontSize="16" FontWeight="Bold" Text="Estado" />
+                    <TextBlock Margin="0,4,0,0" FontSize="12" Foreground="#FFA9ABBE"
+                               Text="Revisa el estado del sistema y realiza el mantenimiento de tus controladores desde aquí." />
+                    <TextBlock Margin="0,16,0,0" FontSize="13" Foreground="#FF9ED27A"
+                               Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+    </ScrollViewer>
+</UserControl>

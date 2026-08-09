@@ -1,0 +1,105 @@
+<Window x:Class="DriverManager.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:DriverManager.App.ViewModels"
+        xmlns:views="clr-namespace:DriverManager.App.Views"
+        mc:Ignorable="d"
+        Title="Driver Manager" Height="720" Width="1200" MinHeight="720" MinWidth="1000"
+        WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+
+    <Grid Background="#FF1E1E2E">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#FF252538" Padding="16" CornerRadius="16" Margin="0,0,16,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Driver Manager" Foreground="#FFFFFFFF" FontSize="20" FontWeight="Bold" Margin="0,0,0,2" />
+                    <TextBlock Text="Controladores y actualizaciones" Foreground="#FF9AA1B3" FontSize="11" Margin="0,0,0,24" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1">
+                    <Button Content="Inicio" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Dashboard" />
+                    <Button Content="Controladores" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Drivers" />
+                    <Button Content="Actualizaciones" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Updates" />
+                    <Button Content="Descargas" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Downloads" />
+                    <Button Content="Respaldos" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Backups" />
+                    <Button Content="Restauración" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Restore" />
+                    <Button Content="Historial" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="History" />
+                    <Button Content="Configuración" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Settings" />
+                </StackPanel>
+
+                <Border Grid.Row="2" Background="#FF1E1E2E" CornerRadius="10" Padding="12,10">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#FF9AA1B3" FontSize="11" TextWrapping="Wrap" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="0,16,16,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" ClipToBounds="True">
+                <views:DashboardView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Dashboard}" />
+                <views:DriversView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Drivers}" />
+                <views:UpdatesView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Updates}" />
+                <views:DownloadsView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Downloads}" />
+                <views:BackupsView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Backups}" />
+                <views:RestoreView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Restore}" />
+                <views:HistoryView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=History}" />
+                <views:SettingsView
+                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Settings}" />
+            </Grid>
+
+            <Border Grid.Row="1" Height="52" Background="#FF252538" CornerRadius="16"
+                    Padding="16,0" Margin="0,16,0,0">
+                <Grid VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Controladores con atención:" Foreground="#FF9AA1B3" FontSize="12"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding AttentionCount}" Foreground="#FFFF6B6B" FontSize="14" FontWeight="Bold"
+                                   VerticalAlignment="Center" Margin="6,0,0,0" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="© 2026 Shoropio Corporation. Todos los derechos reservados."
+                               Foreground="#FF9AA1B3" FontSize="12" VerticalAlignment="Center"
+                               TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
