@@ -17,6 +17,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly IDriverUpdater _updater;
     private readonly FileLogger _logger;
     private readonly SettingsService _settingsService;
+    private readonly DriverStateStore _stateStore;
     private AppSettings _settings;
     private IDriverUpdateSource _updateSource;
     private bool _updateSourceInstalls;
@@ -34,6 +35,8 @@ public sealed class MainViewModel : ObservableObject
     private string _driverFilterText = string.Empty;
     private string _selectedStatusFilter = "Todos";
     private string _selectedUpdateSource = "Windows Update";
+    private DateTime _lastScanAt;
+    private DateTime _lastCheckAt;
 
     public MainViewModel()
     {
@@ -41,6 +44,7 @@ public sealed class MainViewModel : ObservableObject
         _logger = new FileLogger();
         _updater = new DriverUpdaterService(_logger);
         _settingsService = new SettingsService();
+        _stateStore = new DriverStateStore();
         _settings = _settingsService.Load();
         _updateSource = DriverUpdateSourceFactory.Create(_settings, _logger);
         _updateSourceInstalls = DriverUpdateSourceFactory.InstallsPackages(_settings);
@@ -72,7 +76,7 @@ public sealed class MainViewModel : ObservableObject
         SelectedStatusFilter = "Todos";
 
         ScanDriversCommand = new AsyncRelayCommand(ScanDriversAsync, () => !IsBusy);
-        CheckUpdatesCommand = new AsyncRelayCommand(CheckUpdatesAsync, () => !IsBusy);
+        CheckUpdatesCommand = new AsyncRelayCommand(() => CheckUpdatesAsync(), () => !IsBusy);
         InstallUpdatesCommand = new AsyncRelayCommand(InstallUpdatesAsync, () => !IsBusy);
         CreateBackupCommand = new AsyncRelayCommand(CreateBackupAsync, () => !IsBusy);
         RefreshBackupsCommand = new AsyncRelayCommand(RefreshBackupsAsync, () => !IsBusy);
@@ -83,6 +87,64 @@ public sealed class MainViewModel : ObservableObject
         RefreshHistoryCommand = new AsyncRelayCommand(RefreshHistoryAsync);
         SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync, () => !IsBusy);
         NavigateCommand = new RelayCommand(Navigate);
+
+        InitializationTask = InitializeAsync();
+    }
+
+    public Task InitializationTask { get; }
+
+    private async Task InitializeAsync()
+    {
+        var snapshot = await _stateStore.LoadAsync();
+        if (snapshot?.Drivers is not { Count: > 0 })
+        {
+            return;
+        }
+
+        using (BusyScope())
+        {
+            try
+            {
+                _lastScanAt = snapshot.LastScanAt;
+                _lastCheckAt = snapshot.LastUpdateCheckAt;
+                Drivers.Clear();
+                PendingUpdates.Clear();
+                foreach (var info in snapshot.Drivers)
+                {
+                    var viewModel = new DriverViewModel(info);
+                    Drivers.Add(viewModel);
+                    if (info.Status == DriverStatus.UpdateAvailable)
+                    {
+                        PendingUpdates.Add(viewModel);
+                    }
+                }
+
+                DriversView.Refresh();
+                RefreshCounters();
+
+                var lastScan = snapshot.LastScanAt == default ? string.Empty : $" (último escaneo: {snapshot.LastScanAt:g})";
+                if (PendingUpdates.Count > 0)
+                {
+                    StatusMessage = $"Hay {PendingUpdates.Count} actualización(es) disponible(s) desde la última búsqueda. Revisa la pestaña Actualizaciones.";
+                    _logger.Log($"Estado restaurado: {Drivers.Count} controladores, {PendingUpdates.Count} actualizaciones pendientes.");
+                }
+                else
+                {
+                    StatusMessage = $"Lista de controladores cargada de la última sesión{lastScan}.";
+                    _logger.Log($"Estado restaurado: {Drivers.Count} controladores.");
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = "No se pudo cargar el estado guardado.";
+                _logger.LogError("Error al cargar el estado guardado.", ex);
+            }
+        }
+
+        if (_settings.CheckUpdatesOnStartup)
+        {
+            await CheckUpdatesAsync(fromStartup: true);
+        }
     }
 
     public string BackupFolder
@@ -281,6 +343,7 @@ public sealed class MainViewModel : ObservableObject
                 RefreshCounters();
                 StatusMessage = $"Escaneo completado: {Drivers.Count} controladores encontrados.";
                 _logger.Log($"Escaneo completado con {Drivers.Count} controladores.");
+                await PersistStateAsync(DateTime.Now, null);
             }
             catch (Exception ex)
             {
@@ -290,7 +353,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private async Task CheckUpdatesAsync()
+    private async Task CheckUpdatesAsync(bool fromStartup = false)
     {
         if (IsBusy)
         {
@@ -300,7 +363,11 @@ public sealed class MainViewModel : ObservableObject
         if (DriverUpdateSourceFactory.RequiresConfiguration(_settings, out var configError))
         {
             StatusMessage = configError;
-            SelectedPage = AppPage.Settings;
+            if (!fromStartup)
+            {
+                SelectedPage = AppPage.Settings;
+            }
+
             return;
         }
 
@@ -338,6 +405,7 @@ public sealed class MainViewModel : ObservableObject
                     ? "Tu equipo está al día: no se encontraron actualizaciones."
                     : $"Se encontraron {PendingUpdates.Count} actualización(es) disponible(s).";
                 _logger.Log($"Actualizaciones encontradas: {PendingUpdates.Count}.");
+                await PersistStateAsync(null, DateTime.Now);
             }
             catch (Exception ex)
             {
@@ -394,6 +462,7 @@ public sealed class MainViewModel : ObservableObject
                         ? $"{result.Message} Se recomienda reiniciar el equipo."
                         : result.Message;
                     _logger.Log("Instalación de actualizaciones completada.");
+                    await PersistStateAsync(DateTime.Now, DateTime.Now);
                 }
                 else
                 {
@@ -651,7 +720,20 @@ public sealed class MainViewModel : ObservableObject
                 DownloadsFolder = _settings.ResolveDownloadsFolder();
                 _updateSource = DriverUpdateSourceFactory.Create(_settings, _logger);
                 _updateSourceInstalls = DriverUpdateSourceFactory.InstallsPackages(_settings);
+
+                foreach (var viewModel in Drivers)
+                {
+                    if (viewModel.DriverInfo.Status == DriverStatus.UpdateAvailable)
+                    {
+                        viewModel.DriverInfo.Status = DriverStatus.UpToDate;
+                        viewModel.Refresh();
+                    }
+                }
+
                 PendingUpdates.Clear();
+                DriversView.Refresh();
+                RefreshCounters();
+                await PersistStateAsync(null, null);
 
                 StatusMessage = "Configuración guardada. La próxima búsqueda usará la nueva fuente.";
                 _logger.Log($"Configuración guardada. Fuente de actualizaciones: {_settings.UpdateSource}.");
@@ -689,6 +771,29 @@ public sealed class MainViewModel : ObservableObject
     {
         OutdatedDriversCount = Drivers.Count(d => d.DriverInfo.Status == DriverStatus.UpdateAvailable);
         AttentionCount = Drivers.Count(d => d.DriverInfo.Status == DriverStatus.ProblemDetected);
+    }
+
+    private async Task PersistStateAsync(DateTime? scanAt, DateTime? checkAt)
+    {
+        if (scanAt is not null)
+        {
+            _lastScanAt = scanAt.Value;
+        }
+
+        if (checkAt is not null)
+        {
+            _lastCheckAt = checkAt.Value;
+        }
+
+        var snapshot = new DriverStateSnapshot
+        {
+            LastScanAt = _lastScanAt,
+            LastUpdateCheckAt = _lastCheckAt,
+            UpdateSource = _settings.UpdateSource,
+            Drivers = Drivers.Select(d => d.DriverInfo).ToList()
+        };
+
+        await _stateStore.SaveAsync(snapshot);
     }
 
     private static bool DeviceNamesMatch(string a, string b)
