@@ -6,7 +6,7 @@
              xmlns:vm="clr-namespace:DriverManager.App.ViewModels"
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
              mc:Ignorable="d">
-    <Grid Margin="24">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -44,47 +44,50 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="160" />
-                    <ColumnDefinition Width="150" />
-                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="3*" MinWidth="180" />
+                    <ColumnDefinition Width="2*" MinWidth="120" />
+                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                    <ColumnDefinition Width="1*" MinWidth="80" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.ColumnSpan="4" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1"
-                        Background="#FF26263C" Padding="12,10">
+                <Border Grid.ColumnSpan="5" Style="{StaticResource TableRowBorderStyle}" Background="#FF26263C">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="160" />
-                            <ColumnDefinition Width="150" />
-                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Foreground="#FF8B8FA6" FontSize="12" FontWeight="Bold"
-                                   Text="Dispositivo" />
-                        <TextBlock Grid.Column="1" Foreground="#FF8B8FA6" FontSize="12" FontWeight="Bold"
-                                   Text="Categoría" />
-                        <TextBlock Grid.Column="2" Foreground="#FF8B8FA6" FontSize="12" FontWeight="Bold"
-                                   Text="Versión instalada" />
-                        <TextBlock Grid.Column="3" Foreground="#FF8B8FA6" FontSize="12" FontWeight="Bold"
-                                   Text="Versión disponible" />
+                        <TextBlock Style="{StaticResource TableHeaderTextStyle}" Text="Dispositivo" ToolTip="Nombre del dispositivo" />
+                        <TextBlock Grid.Column="1" Style="{StaticResource TableHeaderTextStyle}" Text="Categoría" ToolTip="Categoría del controlador" />
+                        <TextBlock Grid.Column="2" Style="{StaticResource TableHeaderTextStyle}" Text="Versión instalada" ToolTip="Versión actualmente instalada" />
+                        <TextBlock Grid.Column="3" Style="{StaticResource TableHeaderTextStyle}" Text="Versión disponible" ToolTip="Versión más reciente disponible" />
+                        <TextBlock Grid.Column="4" Style="{StaticResource TableHeaderTextStyle}" Text="Acción" ToolTip="Instalar esta actualización" />
                     </Grid>
                 </Border>
 
-                <ListBox Grid.Row="1" Grid.ColumnSpan="4"
-                         ItemsSource="{Binding PendingUpdates}"
-                         Background="Transparent" BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox Grid.Row="1" Grid.ColumnSpan="5"
+                          ItemsSource="{Binding PendingUpdates}"
+                          Background="Transparent" BorderThickness="0"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="True">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="0" />
                             <Setter Property="Margin" Value="0" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Background" Value="#FF26263C" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#FF32334B" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -98,43 +101,47 @@
                         <DataTemplate>
                             <Grid MinHeight="46">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="160" />
-                                    <ColumnDefinition Width="150" />
-                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="3*" MinWidth="180" />
+                                    <ColumnDefinition Width="2*" MinWidth="120" />
+                                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                                    <ColumnDefinition Width="1*" MinWidth="80" />
                                 </Grid.ColumnDefinitions>
 
-                                <Border BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock FontWeight="SemiBold" FontSize="12.5"
-                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                               Text="{Binding DeviceName}" ToolTip="{Binding DeviceName}" />
+                                <Border Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableRowTextStyle}" FontWeight="SemiBold"
+                                               Text="{Binding DeviceName}" TextTrimming="CharacterEllipsis" ToolTip="{Binding DeviceName}" />
                                 </Border>
 
-                                <Border Grid.Column="1" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock Foreground="#FFA9ABBE" FontSize="12"
-                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                               Text="{Binding Category}" ToolTip="{Binding Category}" />
+                                <Border Grid.Column="1" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableRowTextStyle}" Foreground="#FFA9ABBE"
+                                               Text="{Binding Category}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Category}" />
                                 </Border>
 
-                                <Border Grid.Column="2" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock FontFamily="Consolas" FontSize="12"
-                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                               Text="{Binding InstalledVersion}" ToolTip="{Binding InstalledVersion}" />
+                                <Border Grid.Column="2" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableVersionTextStyle}"
+                                               Text="{Binding InstalledVersion}" TextTrimming="CharacterEllipsis" ToolTip="{Binding InstalledVersion}" />
                                 </Border>
 
-                                <Border Grid.Column="3" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock FontFamily="Consolas" FontSize="12" Foreground="#FF9ED27A"
-                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                               Text="{Binding AvailableVersion}" ToolTip="{Binding AvailableVersion}" />
+                                <Border Grid.Column="3" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableVersionTextStyle}" Foreground="#FF9ED27A"
+                                               Text="{Binding AvailableVersion}" TextTrimming="CharacterEllipsis" ToolTip="{Binding AvailableVersion}" />
+                                </Border>
+
+                                <Border Grid.Column="4" Style="{StaticResource TableRowBorderStyle}" Padding="8,6">
+                                    <Button Content="Instalar"
+                                            Command="{Binding DataContext.InstallDriverCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}" />
                                 </Border>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <TextBlock Grid.Row="1" Grid.ColumnSpan="4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="5" HorizontalAlignment="Center" VerticalAlignment="Center"
                            Foreground="#FFA9ABBE" FontSize="14"
-                           Text="No hay actualizaciones pendientes. Busca actualizaciones primero.">
+                           Text="{Binding EmptyUpdateMessage}">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Collapsed" />

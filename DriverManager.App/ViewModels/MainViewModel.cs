@@ -4,8 +4,10 @@ using DriverManager.Core.Models;
 using DriverManager.Services.Implementations;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Data;
 using System.Windows.Input;
 
@@ -15,9 +17,13 @@ public sealed class MainViewModel : ObservableObject
 {
     private readonly IDriverBackupService _backupService;
     private readonly IDriverUpdater _updater;
+    private readonly IGpuInfoService _gpuService;
+    private readonly IGpuTelemetryService _telemetryService;
+    private readonly ISystemInfoService _systemInfoService;
     private readonly FileLogger _logger;
     private readonly SettingsService _settingsService;
     private readonly DriverStateStore _stateStore;
+    private readonly DownloadManager _downloadManager;
     private AppSettings _settings;
     private IDriverUpdateSource _updateSource;
     private bool _updateSourceInstalls;
@@ -25,35 +31,47 @@ public sealed class MainViewModel : ObservableObject
     private AppPage _selectedPage = AppPage.Dashboard;
     private bool _isBusy;
     private string _statusMessage = "Listo";
+    private bool _isStatusVisible;
+    private string _statusForeground = "#FF9ED27A";
     private int _outdatedDriversCount;
     private int _attentionCount;
+    private int _gpuAttentionCount;
     private string _latestBackup = "Nunca";
     private DriverBackupInfo? _selectedBackup;
-    private string _downloadName = string.Empty;
-    private string _downloadUrl = string.Empty;
     private string _historyLog = string.Empty;
     private string _driverFilterText = string.Empty;
     private string _selectedStatusFilter = "Todos";
     private string _selectedUpdateSource = "Windows Update";
     private DateTime _lastScanAt;
     private DateTime _lastCheckAt;
+    private CancellationTokenSource? _searchCts;
 
     public MainViewModel()
     {
         _backupService = new DriverBackupService();
         _logger = new FileLogger();
         _updater = new DriverUpdaterService(_logger);
+        _gpuService = new GpuInfoService();
+        _telemetryService = new GpuTelemetryService();
+        _systemInfoService = new SystemInfoService();
         _settingsService = new SettingsService();
         _stateStore = new DriverStateStore();
         _settings = _settingsService.Load();
         _updateSource = DriverUpdateSourceFactory.Create(_settings, _logger);
         _updateSourceInstalls = DriverUpdateSourceFactory.InstallsPackages(_settings);
 
+        var downloadsDir = _settings.ResolveDownloadsFolder();
+        var stateDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DriverManager");
+        Directory.CreateDirectory(stateDir);
+        _downloadManager = new DownloadManager(Path.Combine(stateDir, "downloads.json"), 3, _logger);
+        DownloadsVM = new DownloadsViewModel(_downloadManager, _logger);
+
         BackupFolder = _settings.ResolveBackupFolder();
-        DownloadsFolder = _settings.ResolveDownloadsFolder();
+        DownloadsFolder = downloadsDir;
         Drivers = new ObservableCollection<DriverViewModel>();
         PendingUpdates = new ObservableCollection<DriverViewModel>();
         Backups = new ObservableCollection<DriverBackupInfo>();
+        Gpus = new ObservableCollection<GpuViewModel>();
         DriversView = CollectionViewSource.GetDefaultView(Drivers);
         DriversView.Filter = FilterDrivers;
 
@@ -61,7 +79,8 @@ public sealed class MainViewModel : ObservableObject
         {
             "Windows Update",
             "NVIDIA (GeForce)",
-            "Dell (Service Tag)"
+            "Dell (Service Tag)",
+            "Intel & Killer"
         };
         StatusFilterOptions = new ObservableCollection<string>
         {
@@ -76,17 +95,20 @@ public sealed class MainViewModel : ObservableObject
         SelectedStatusFilter = "Todos";
 
         ScanDriversCommand = new AsyncRelayCommand(ScanDriversAsync, () => !IsBusy);
+        ScanGpusCommand = new AsyncRelayCommand(ScanGpusAsync, () => !IsBusy);
         CheckUpdatesCommand = new AsyncRelayCommand(() => CheckUpdatesAsync(), () => !IsBusy);
         InstallUpdatesCommand = new AsyncRelayCommand(InstallUpdatesAsync, () => !IsBusy);
         CreateBackupCommand = new AsyncRelayCommand(CreateBackupAsync, () => !IsBusy);
         RefreshBackupsCommand = new AsyncRelayCommand(RefreshBackupsAsync, () => !IsBusy);
-        DeleteBackupCommand = new AsyncRelayCommand(DeleteSelectedBackupAsync, () => !IsBusy && SelectedBackup is not null);
-        RestoreBackupCommand = new AsyncRelayCommand(RestoreBackupAsync, () => !IsBusy && SelectedBackup is not null);
+        DeleteBackupCommand = new AsyncRelayCommand(DeleteSelectedBackupAsync, () => !IsBusy);
+        RestoreBackupCommand = new AsyncRelayCommand(RestoreBackupAsync, () => !IsBusy);
         CreateRestorePointCommand = new AsyncRelayCommand(CreateRestorePointAsync, () => !IsBusy);
-        DownloadCommand = new AsyncRelayCommand(DownloadAsync, () => !IsBusy);
+        InstallDriverCommand = new AsyncRelayCommand<DriverViewModel>(InstallDriverAsync, _ => !IsBusy);
+        OpenUrlCommand = new RelayCommand(OpenUrl);
         RefreshHistoryCommand = new AsyncRelayCommand(RefreshHistoryAsync);
         SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync, () => !IsBusy);
         NavigateCommand = new RelayCommand(Navigate);
+        RefreshSystemInfoCommand = new AsyncRelayCommand(RefreshSystemInfoAsync);
 
         InitializationTask = InitializeAsync();
     }
@@ -119,6 +141,12 @@ public sealed class MainViewModel : ObservableObject
                     }
                 }
 
+                Gpus.Clear();
+                foreach (var gpu in snapshot.Gpus)
+                {
+                    Gpus.Add(new GpuViewModel(gpu));
+                }
+
                 DriversView.Refresh();
                 RefreshCounters();
 
@@ -126,12 +154,12 @@ public sealed class MainViewModel : ObservableObject
                 if (PendingUpdates.Count > 0)
                 {
                     StatusMessage = $"Hay {PendingUpdates.Count} actualización(es) disponible(s) desde la última búsqueda. Revisa la pestaña Actualizaciones.";
-                    _logger.Log($"Estado restaurado: {Drivers.Count} controladores, {PendingUpdates.Count} actualizaciones pendientes.");
+                    _logger.Log($"Estado restaurado: {Drivers.Count} controladores, {Gpus.Count} GPUs, {PendingUpdates.Count} actualizaciones pendientes.");
                 }
                 else
                 {
                     StatusMessage = $"Lista de controladores cargada de la última sesión{lastScan}.";
-                    _logger.Log($"Estado restaurado: {Drivers.Count} controladores.");
+                    _logger.Log($"Estado restaurado: {Drivers.Count} controladores, {Gpus.Count} tarjeta(s) gráfica(s).");
                 }
             }
             catch (Exception ex)
@@ -145,6 +173,9 @@ public sealed class MainViewModel : ObservableObject
         {
             await CheckUpdatesAsync(fromStartup: true);
         }
+
+        await RefreshTelemetryAsync();
+        await RefreshSystemInfoAsync();
     }
 
     public string BackupFolder
@@ -167,8 +198,13 @@ public sealed class MainViewModel : ObservableObject
     public ICollectionView DriversView { get; }
     public ObservableCollection<DriverViewModel> PendingUpdates { get; }
     public ObservableCollection<DriverBackupInfo> Backups { get; }
+    public ObservableCollection<GpuViewModel> Gpus { get; }
     public ObservableCollection<string> UpdateSourceOptions { get; }
     public ObservableCollection<string> StatusFilterOptions { get; }
+    public ObservableCollection<string> HistoryEntries { get; } = new();
+    public ObservableCollection<SystemInfoSectionViewModel> SystemInfoSections { get; } = new();
+
+    public int FilteredDriversCount => DriversView.Cast<object>().Count();
 
     public AppPage SelectedPage
     {
@@ -185,8 +221,37 @@ public sealed class MainViewModel : ObservableObject
     public string StatusMessage
     {
         get => _statusMessage;
-        private set => SetProperty(ref _statusMessage, value);
+        private set
+        {
+            if (SetProperty(ref _statusMessage, value))
+            {
+                IsStatusVisible = !string.IsNullOrEmpty(value) && value != "Listo";
+                StatusForeground = value.Contains("Error", StringComparison.OrdinalIgnoreCase) ||
+                                   value.Contains("error", StringComparison.OrdinalIgnoreCase) ||
+                                   value.Contains("No se pudo", StringComparison.OrdinalIgnoreCase)
+                    ? "#FFFF6B6B" : "#FF9ED27A";
+            }
+        }
     }
+
+    public bool IsStatusVisible
+    {
+        get => _isStatusVisible;
+        private set => SetProperty(ref _isStatusVisible, value);
+    }
+
+    public string StatusForeground
+    {
+        get => _statusForeground;
+        private set => SetProperty(ref _statusForeground, value);
+    }
+
+    public string SystemInfoStatus
+    {
+        get => _systemInfoStatus;
+        private set => SetProperty(ref _systemInfoStatus, value);
+    }
+    private string _systemInfoStatus = string.Empty;
 
     public int OutdatedDriversCount
     {
@@ -198,6 +263,12 @@ public sealed class MainViewModel : ObservableObject
     {
         get => _attentionCount;
         private set => SetProperty(ref _attentionCount, value);
+    }
+
+    public int GpuAttentionCount
+    {
+        get => _gpuAttentionCount;
+        private set => SetProperty(ref _gpuAttentionCount, value);
     }
 
     public string LatestBackup
@@ -219,17 +290,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public string DownloadName
-    {
-        get => _downloadName;
-        set => SetProperty(ref _downloadName, value);
-    }
-
-    public string DownloadUrl
-    {
-        get => _downloadUrl;
-        set => SetProperty(ref _downloadUrl, value);
-    }
+    public DownloadsViewModel DownloadsVM { get; }
 
     public string HistoryLog
     {
@@ -245,6 +306,7 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref _driverFilterText, value))
             {
                 DriversView.Refresh();
+                OnPropertyChanged(nameof(FilteredDriversCount));
             }
         }
     }
@@ -257,6 +319,7 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref _selectedStatusFilter, value))
             {
                 DriversView.Refresh();
+                OnPropertyChanged(nameof(FilteredDriversCount));
             }
         }
     }
@@ -264,12 +327,48 @@ public sealed class MainViewModel : ObservableObject
     public string SelectedUpdateSource
     {
         get => _selectedUpdateSource;
-        set => SetProperty(ref _selectedUpdateSource, value);
+        set
+        {
+            if (SetProperty(ref _selectedUpdateSource, value))
+            {
+                var code = MapUpdateSourceToCode(value);
+                _settings.UpdateSource = code;
+                _updateSource = DriverUpdateSourceFactory.Create(_settings, _logger);
+                _updateSourceInstalls = DriverUpdateSourceFactory.InstallsPackages(_settings);
+
+                _searchCts?.Cancel();
+                _searchCts?.Dispose();
+                _searchCts = null;
+
+                DriversView.Refresh();
+                RefreshCounters();
+
+                OnPropertyChanged(nameof(UpdateSearchMessage));
+                OnPropertyChanged(nameof(EmptyUpdateMessage));
+                OnPropertyChanged(nameof(UpdateLoadingIconData));
+                OnPropertyChanged(nameof(CurrentSourceName));
+            }
+        }
     }
+
+    public string CurrentSourceName => DescribeSource(_settings.UpdateSource);
+
+    public string UpdateSearchMessage => $"Buscando actualizaciones ({DescribeSource(_settings.UpdateSource)})...";
+
+    public string EmptyUpdateMessage => $"No hay actualizaciones pendientes de {DescribeSource(_settings.UpdateSource)}. Busca actualizaciones primero.";
+
+    public string UpdateLoadingIconData => DescribeSource(_settings.UpdateSource) switch
+    {
+        "NVIDIA" => "M23 4 v6 h-6 M1 20 v-6 h6 M3.51 9 a9 9 0 0 1 14.85 -3.36 L23 10 M1 14 l4.64 4.36 A9 9 0 0 0 20.49 15",
+        "Intel & Killer" => "M21 16 V8 a2 2 0 0 0 -1 -1.73 l-7 -4 a2 2 0 0 0 -2 0 l-7 4 A2 2 0 0 0 3 8 v8 a2 2 0 0 0 1 1.73 l7 4 a2 2 0 0 0 2 0 l7 -4 A2 2 0 0 0 21 16 Z M3.27 6.96 L12 12.01 L20.73 6.96 M12 22.08 V12",
+        "Dell" => "M2 5 a2 2 0 0 1 2 -2 h16 a2 2 0 0 1 2 2 v10 a2 2 0 0 1 -2 2 H4 a2 2 0 0 1 -2 -2 Z M8 21 h8 M12 17 v4",
+        _ => "M12 2 l8 3 v6 c0 5 -3.5 9.5 -8 11 c-4.5 -1.5 -8 -6 -8 -11 V5 Z",
+    };
 
     public AppSettings Settings => _settings;
 
     public IAsyncCommand ScanDriversCommand { get; }
+    public IAsyncCommand ScanGpusCommand { get; }
     public IAsyncCommand CheckUpdatesCommand { get; }
     public IAsyncCommand InstallUpdatesCommand { get; }
     public IAsyncCommand CreateBackupCommand { get; }
@@ -277,9 +376,11 @@ public sealed class MainViewModel : ObservableObject
     public IAsyncCommand DeleteBackupCommand { get; }
     public IAsyncCommand RestoreBackupCommand { get; }
     public IAsyncCommand CreateRestorePointCommand { get; }
-    public IAsyncCommand DownloadCommand { get; }
+    public IAsyncCommand InstallDriverCommand { get; }
+    public ICommand OpenUrlCommand { get; }
     public IAsyncCommand RefreshHistoryCommand { get; }
     public IAsyncCommand SaveSettingsCommand { get; }
+    public IAsyncCommand RefreshSystemInfoCommand { get; }
     public ICommand NavigateCommand { get; }
 
     private void Navigate(object? parameter)
@@ -353,12 +454,78 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    private async Task ScanGpusAsync()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        using (BusyScope())
+        {
+            StatusMessage = "Analizando tarjetas gráficas...";
+            _logger.Log("Iniciando análisis de tarjetas gráficas.");
+            try
+            {
+                var gpus = await _gpuService.GetGpusAsync();
+                Gpus.Clear();
+                foreach (var gpu in gpus)
+                {
+                    Gpus.Add(new GpuViewModel(gpu));
+                }
+
+                await RefreshTelemetryAsync();
+                RefreshCounters();
+                StatusMessage = $"Análisis completado: {Gpus.Count} tarjeta(s) gráfica(s) encontrada(s).";
+                _logger.Log($"Análisis de tarjetas gráficas completado con {Gpus.Count} adaptador(es).");
+                await PersistStateAsync(DateTime.Now, null);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = "Error al analizar las tarjetas gráficas.";
+                _logger.LogError("Error al analizar tarjetas gráficas.", ex);
+            }
+        }
+    }
+
+    private bool _telemetryRefreshInProgress;
+
+    public async Task RefreshTelemetryAsync()
+    {
+        if (Gpus.Count == 0 || _telemetryRefreshInProgress)
+        {
+            return;
+        }
+
+        _telemetryRefreshInProgress = true;
+        try
+        {
+            var targets = Gpus.ToArray();
+            var telemetry = await _telemetryService.ReadAsync(targets.Select(g => g.GpuInfo).ToArray());
+            for (var i = 0; i < targets.Length && i < telemetry.Count; i++)
+            {
+                targets[i].Telemetry = telemetry[i];
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error al actualizar la telemetría de las tarjetas gráficas.", ex);
+        }
+        finally
+        {
+            _telemetryRefreshInProgress = false;
+        }
+    }
+
     private async Task CheckUpdatesAsync(bool fromStartup = false)
     {
         if (IsBusy)
         {
             return;
         }
+
+        var currentSource = _updateSource;
+        var sourceCode = _settings.UpdateSource;
 
         if (DriverUpdateSourceFactory.RequiresConfiguration(_settings, out var configError))
         {
@@ -371,15 +538,40 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new CancellationTokenSource();
+        var ct = _searchCts.Token;
+
         using (BusyScope())
         {
-            StatusMessage = $"Buscando actualizaciones ({DescribeSource(_settings.UpdateSource)})...";
-            _logger.Log($"Buscando actualizaciones de controladores ({_settings.UpdateSource}).");
+            StatusMessage = $"Buscando actualizaciones ({DescribeSource(sourceCode)})...";
+            _logger.Log($"Buscando actualizaciones de controladores ({sourceCode}).");
             try
             {
-                var updates = await _updateSource.CheckForUpdatesAsync();
+                var updates = await currentSource.CheckForUpdatesAsync(ct);
+
+                ct.ThrowIfCancellationRequested();
+
+                PendingUpdates.Clear();
+                ResetDriverUpdateStatuses();
+
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var update in updates)
                 {
+                    ct.ThrowIfCancellationRequested();
+
+                    var dedupKey = string.Join("|",
+                        Normalize(update.DeviceName),
+                        Normalize(update.AvailableVersion),
+                        Normalize(update.Provider),
+                        Normalize(update.UpdateId));
+
+                    if (!string.IsNullOrWhiteSpace(dedupKey) && !seen.Add(dedupKey))
+                    {
+                        continue;
+                    }
+
                     var existing = Drivers.FirstOrDefault(d => DeviceNamesMatch(d.DriverInfo.DeviceName, update.DeviceName));
                     if (existing is not null)
                     {
@@ -402,14 +594,19 @@ public sealed class MainViewModel : ObservableObject
                 DriversView.Refresh();
                 RefreshCounters();
                 StatusMessage = PendingUpdates.Count == 0
-                    ? "Tu equipo está al día: no se encontraron actualizaciones."
-                    : $"Se encontraron {PendingUpdates.Count} actualización(es) disponible(s).";
+                    ? $"No se encontraron actualizaciones de {DescribeSource(sourceCode)}."
+                    : $"Se encontraron {PendingUpdates.Count} actualización(es) desde {DescribeSource(sourceCode)}.";
                 _logger.Log($"Actualizaciones encontradas: {PendingUpdates.Count}.");
                 await PersistStateAsync(null, DateTime.Now);
             }
+            catch (OperationCanceledException)
+            {
+                StatusMessage = "Búsqueda cancelada por cambio de proveedor.";
+                _logger.Log("Búsqueda de actualizaciones cancelada.");
+            }
             catch (Exception ex)
             {
-                StatusMessage = $"No se pudo consultar {DescribeSource(_settings.UpdateSource)}.";
+                StatusMessage = $"No se pudo consultar {DescribeSource(sourceCode)}.";
                 _logger.LogError("Error al buscar actualizaciones.", ex);
             }
         }
@@ -428,54 +625,39 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
-        using (BusyScope())
+        var enqueued = 0;
+        foreach (var update in PendingUpdates.ToArray())
         {
-            var progress = new Progress<string>(message => StatusMessage = message);
-            try
+            var downloadUrl = update.DriverInfo.DriverPath;
+            if (string.IsNullOrWhiteSpace(downloadUrl) ||
+                !Uri.TryCreate(downloadUrl, UriKind.Absolute, out _))
             {
-                if (_updateSourceInstalls)
-                {
-                    StatusMessage = "Creando punto de restauración...";
-                    var restorePoint = await _updater.CreateRestorePointAsync("DriverManager: antes de actualizar controladores");
-                    if (!restorePoint.Success)
-                    {
-                        _logger.Log($"Aviso: no se pudo crear el punto de restauración ({restorePoint.Message}).");
-                    }
-                }
-
-                var pending = PendingUpdates.Select(vm => vm.DriverInfo).ToArray();
-                var result = await _updateSource.DownloadAndInstallAsync(pending, progress);
-
-                if (result.Success && _updateSourceInstalls)
-                {
-                    foreach (var viewModel in PendingUpdates.ToArray())
-                    {
-                        viewModel.DriverInfo.InstalledVersion = viewModel.DriverInfo.AvailableVersion;
-                        viewModel.DriverInfo.Status = DriverStatus.UpToDate;
-                        viewModel.Refresh();
-                        PendingUpdates.Remove(viewModel);
-                    }
-
-                    DriversView.Refresh();
-                    RefreshCounters();
-                    StatusMessage = result.RequiresReboot
-                        ? $"{result.Message} Se recomienda reiniciar el equipo."
-                        : result.Message;
-                    _logger.Log("Instalación de actualizaciones completada.");
-                    await PersistStateAsync(DateTime.Now, DateTime.Now);
-                }
-                else
-                {
-                    StatusMessage = result.Message;
-                    _logger.LogError(result.Details is { Length: > 0 } details ? $"{result.Message} | {details}" : result.Message);
-                }
+                continue;
             }
-            catch (Exception ex)
+
+            var fileName = Path.GetFileName(new Uri(downloadUrl).LocalPath);
+            if (string.IsNullOrWhiteSpace(fileName))
             {
-                StatusMessage = "Error al instalar las actualizaciones.";
-                _logger.LogError("Error al instalar actualizaciones.", ex);
+                fileName = $"{update.DriverInfo.DeviceName}_{update.DriverInfo.AvailableVersion}.exe";
             }
+
+            DownloadsVM.EnqueueFromUpdate(
+                downloadUrl,
+                fileName,
+                update.DriverInfo.DeviceName,
+                update.DriverInfo.InstalledVersion,
+                update.DriverInfo.AvailableVersion,
+                DescribeSource(_settings.UpdateSource));
+
+            enqueued++;
         }
+
+        StatusMessage = enqueued > 0
+            ? $"{enqueued} descarga(s) encolada(s). Revisa la pestaña Descargas."
+            : "No se encontraron URLs de descarga válidas.";
+        _logger.Log($"Actualizaciones encoladas: {enqueued}.");
+
+        await Task.CompletedTask;
     }
 
     private async Task CreateBackupAsync()
@@ -641,43 +823,77 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private async Task DownloadAsync()
+    private async Task InstallDriverAsync(DriverViewModel? driver)
     {
-        if (IsBusy)
+        if (IsBusy || driver is null)
         {
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(DownloadUrl))
+        var downloadUrl = driver.DriverInfo.DriverPath;
+        if (string.IsNullOrWhiteSpace(downloadUrl) ||
+            !Uri.TryCreate(downloadUrl, UriKind.Absolute, out _))
         {
-            StatusMessage = "Ingresa una URL de descarga para el controlador.";
+            StatusMessage = "No hay una fuente de descarga válida para este controlador.";
             return;
         }
 
-        using (BusyScope())
+        var fileName = Path.GetFileName(new Uri(downloadUrl).LocalPath);
+        if (string.IsNullOrWhiteSpace(fileName))
         {
-            StatusMessage = "Descargando...";
-            try
-            {
-                Directory.CreateDirectory(DownloadsFolder);
-                var driver = new DriverInfo
-                {
-                    DeviceName = string.IsNullOrWhiteSpace(DownloadName) ? "Descarga manual" : DownloadName.Trim(),
-                    Provider = DownloadUrl.Trim(),
-                    AvailableVersion = DownloadUrl.Trim()
-                };
+            fileName = $"{driver.DriverInfo.DeviceName}_{driver.DriverInfo.AvailableVersion}.exe";
+        }
 
-                var result = await _updater.DownloadDriverAsync(driver, DownloadsFolder);
-                StatusMessage = result.Success
-                    ? $"Descargado en {DownloadsFolder}."
-                    : result.Message;
-                _logger.Log($"Descarga manual: {result.Success} -> {DownloadUrl}");
-            }
-            catch (Exception ex)
+        DownloadsVM.EnqueueFromUpdate(
+            downloadUrl,
+            fileName,
+            driver.DriverInfo.DeviceName,
+            driver.DriverInfo.InstalledVersion,
+            driver.DriverInfo.AvailableVersion,
+            DescribeSource(_settings.UpdateSource));
+
+        StatusMessage = $"Descarga encolada: {fileName}. Revisa la pestaña Descargas.";
+        _logger.Log($"Descarga encolada desde Actualizaciones: {fileName}.");
+
+        await Task.CompletedTask;
+    }
+
+    private void OpenUrl(object? parameter)
+    {
+        if (parameter is not string url || string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "No se pudo abrir la página de descarga.";
+            _logger.LogError($"No se pudo abrir la URL {url}.", ex);
+        }
+    }
+
+    private async Task RefreshSystemInfoAsync()
+    {
+        try
+        {
+            SystemInfoStatus = "Obteniendo información del equipo...";
+            var info = await _systemInfoService.GetSystemInfoAsync();
+            SystemInfoSections.Clear();
+            foreach (var section in info.Sections)
             {
-                StatusMessage = "Error al descargar el controlador.";
-                _logger.LogError("Error en descarga manual.", ex);
+                SystemInfoSections.Add(new SystemInfoSectionViewModel(section));
             }
+
+            SystemInfoStatus = $"Actualizado: {info.CapturedAt:g}";
+        }
+        catch (Exception ex)
+        {
+            SystemInfoStatus = "No se pudo obtener la información del sistema.";
+            _logger.LogError("Error al obtener la información del sistema.", ex);
         }
     }
 
@@ -685,18 +901,33 @@ public sealed class MainViewModel : ObservableObject
     {
         try
         {
+            HistoryEntries.Clear();
             if (!File.Exists(LogFilePath))
             {
                 HistoryLog = "(El log aún no se ha creado. Realiza alguna operación.)";
+                HistoryEntries.Add(HistoryLog);
                 return;
             }
 
             var lines = await Task.Run(() => File.ReadAllLines(LogFilePath).Reverse().Take(500).Reverse().ToArray());
-            HistoryLog = lines.Length == 0 ? "(El log está vacío.)" : string.Join(Environment.NewLine, lines);
+            if (lines.Length == 0)
+            {
+                HistoryLog = "(El log está vacío.)";
+                HistoryEntries.Add(HistoryLog);
+                return;
+            }
+
+            HistoryLog = string.Join(Environment.NewLine, lines);
+            foreach (var line in lines)
+            {
+                HistoryEntries.Add(line);
+            }
         }
         catch (Exception ex)
         {
             HistoryLog = $"No se pudo leer el log: {ex.Message}";
+            HistoryEntries.Clear();
+            HistoryEntries.Add(HistoryLog);
         }
     }
 
@@ -721,15 +952,6 @@ public sealed class MainViewModel : ObservableObject
                 _updateSource = DriverUpdateSourceFactory.Create(_settings, _logger);
                 _updateSourceInstalls = DriverUpdateSourceFactory.InstallsPackages(_settings);
 
-                foreach (var viewModel in Drivers)
-                {
-                    if (viewModel.DriverInfo.Status == DriverStatus.UpdateAvailable)
-                    {
-                        viewModel.DriverInfo.Status = DriverStatus.UpToDate;
-                        viewModel.Refresh();
-                    }
-                }
-
                 PendingUpdates.Clear();
                 DriversView.Refresh();
                 RefreshCounters();
@@ -750,6 +972,7 @@ public sealed class MainViewModel : ObservableObject
     {
         "NVIDIA (GeForce)" => "Nvidia",
         "Dell (Service Tag)" => "Dell",
+        "Intel & Killer" => "Intel",
         _ => "WindowsUpdate"
     };
 
@@ -757,6 +980,7 @@ public sealed class MainViewModel : ObservableObject
     {
         "Nvidia" => "NVIDIA (GeForce)",
         "Dell" => "Dell (Service Tag)",
+        "Intel" => "Intel & Killer",
         _ => "Windows Update"
     };
 
@@ -764,6 +988,7 @@ public sealed class MainViewModel : ObservableObject
     {
         "Nvidia" => "NVIDIA",
         "Dell" => "Dell",
+        "Intel" => "Intel & Killer",
         _ => "Windows Update"
     };
 
@@ -771,6 +996,8 @@ public sealed class MainViewModel : ObservableObject
     {
         OutdatedDriversCount = Drivers.Count(d => d.DriverInfo.Status == DriverStatus.UpdateAvailable);
         AttentionCount = Drivers.Count(d => d.DriverInfo.Status == DriverStatus.ProblemDetected);
+        GpuAttentionCount = Gpus.Count(g => g.GpuInfo.HasProblem);
+        OnPropertyChanged(nameof(FilteredDriversCount));
     }
 
     private async Task PersistStateAsync(DateTime? scanAt, DateTime? checkAt)
@@ -790,7 +1017,8 @@ public sealed class MainViewModel : ObservableObject
             LastScanAt = _lastScanAt,
             LastUpdateCheckAt = _lastCheckAt,
             UpdateSource = _settings.UpdateSource,
-            Drivers = Drivers.Select(d => d.DriverInfo).ToList()
+            Drivers = Drivers.Select(d => d.DriverInfo).ToList(),
+            Gpus = Gpus.Select(g => g.GpuInfo).ToList()
         };
 
         await _stateStore.SaveAsync(snapshot);
@@ -806,6 +1034,18 @@ public sealed class MainViewModel : ObservableObject
     private static string Normalize(string value)
     {
         return new string(value.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+    }
+
+    private void ResetDriverUpdateStatuses()
+    {
+        foreach (var driver in Drivers)
+        {
+            if (driver.DriverInfo.Status == DriverStatus.UpdateAvailable)
+            {
+                driver.DriverInfo.Status = DriverStatus.Installed;
+                driver.Refresh();
+            }
+        }
     }
 
     private IDisposable BusyScope()
@@ -829,7 +1069,7 @@ public sealed class MainViewModel : ObservableObject
         DeleteBackupCommand.RaiseCanExecuteChanged();
         RestoreBackupCommand.RaiseCanExecuteChanged();
         CreateRestorePointCommand.RaiseCanExecuteChanged();
-        DownloadCommand.RaiseCanExecuteChanged();
+        InstallDriverCommand.RaiseCanExecuteChanged();
         SaveSettingsCommand.RaiseCanExecuteChanged();
     }
 

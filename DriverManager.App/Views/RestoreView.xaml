@@ -14,7 +14,7 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="24">
+        <Grid Margin="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -34,13 +34,12 @@
                            Text="Selecciona un respaldo en la lista y restaura sus controladores." />
 
                 <StackPanel Margin="0,16,0,0">
-                    <TextBlock Style="{StaticResource LabelTextStyle}" Text="Respaldo seleccionado" />
                     <TextBlock Margin="0,4,0,0" FontSize="14" FontWeight="SemiBold"
-                               Text="{Binding SelectedBackup.BackupName, TargetNullValue=No hay respaldo seleccionado, FallbackValue=No hay respaldo seleccionado}" />
+                               Text="{Binding SelectedBackup.BackupName, TargetNullValue='No hay respaldo seleccionado'}" />
                     <TextBlock Margin="0,4,0,0" FontSize="12" Foreground="#FFA9ABBE"
-                               Text="{Binding SelectedBackup.BackupPath, TargetNullValue=No disponible, FallbackValue=No disponible}" TextWrapping="Wrap" />
+                               Text="{Binding SelectedBackup.BackupPath, TargetNullValue='No disponible'}" TextWrapping="Wrap" />
                     <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="#FF7AC5FF"
-                               Text="{Binding SelectedBackup.Drivers.Count, StringFormat={}{0} controladores incluidos, FallbackValue=0 controladores incluidos}" />
+                               Text="{Binding SelectedBackup.Drivers.Count, StringFormat='{} {0} controladores incluidos', FallbackValue='0 controladores incluidos'}" />
                 </StackPanel>
 
                 <StackPanel Margin="0,16,0,0" Orientation="Horizontal">

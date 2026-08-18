@@ -23,4 +23,12 @@ public abstract class ObservableObject : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    protected void OnPropertyChanged(params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+    }
 }

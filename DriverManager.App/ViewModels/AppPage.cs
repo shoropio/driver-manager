@@ -4,6 +4,8 @@ public enum AppPage
 {
     Dashboard,
     Drivers,
+    Gpu,
+    System,
     Updates,
     Downloads,
     Backups,

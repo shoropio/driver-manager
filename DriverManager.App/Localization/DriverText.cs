@@ -81,6 +81,66 @@ public static class DriverText
         return string.IsNullOrWhiteSpace(version) ? NoInfo : version.Trim();
     }
 
+    public static string GpuVendorText(GpuVendor vendor) => vendor switch
+    {
+        GpuVendor.Nvidia => "NVIDIA",
+        GpuVendor.Amd => "AMD",
+        GpuVendor.Intel => "Intel",
+        _ => "Desconocido"
+    };
+
+    public static string SoftwareStatusText(SoftwareInstallStatus status) => status switch
+    {
+        SoftwareInstallStatus.Installed => "Instalado",
+        SoftwareInstallStatus.NotInstalled => "No instalado",
+        _ => "No disponible"
+    };
+
+    public static string FormatSize(long bytes)
+    {
+        if (bytes <= 0)
+        {
+            return NoInfo;
+        }
+
+        double value = bytes;
+        var unitIndex = 0;
+        string[] units = { "bytes", "KB", "MB", "GB", "TB" };
+        while (value >= 1024 && unitIndex < units.Length - 1)
+        {
+            value /= 1024;
+            unitIndex++;
+        }
+
+        return string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{value:0.##} {units[unitIndex]}");
+    }
+
+    public static string FormatPercent(double? percent)
+    {
+        return percent is null
+            ? NoInfo
+            : string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{percent:0.#} %");
+    }
+
+    public static string FormatTemperature(double? celsius)
+    {
+        return celsius is null
+            ? NoInfo
+            : string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{celsius:0} °C");
+    }
+
+    public static string FormatMemory(long? usageBytes, long? limitBytes)
+    {
+        if (usageBytes is null || usageBytes <= 0)
+        {
+            return NoInfo;
+        }
+
+        return limitBytes is not null && limitBytes > 0
+            ? $"{FormatSize(usageBytes.Value)} de {FormatSize(limitBytes.Value)}"
+            : FormatSize(usageBytes.Value);
+    }
+
     private static readonly Dictionary<string, string> KnownCategories = new(System.StringComparer.OrdinalIgnoreCase)
     {
         ["1394"] = "IEEE 1394",

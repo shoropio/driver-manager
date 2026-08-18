@@ -17,7 +17,7 @@ public sealed class DriverUpdaterService : IDriverUpdater
         _logger = logger;
     }
 
-    public async Task<DriverUpdateResult> DownloadDriverAsync(DriverInfo driver, string outputDirectory, CancellationToken cancellationToken = default)
+    public async Task<DriverUpdateResult> DownloadDriverAsync(DriverInfo driver, string outputDirectory, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         var sourceUri = TryGetSourceUri(driver);
         if (sourceUri is null)
@@ -45,9 +45,24 @@ public sealed class DriverUpdaterService : IDriverUpdater
             using var client = new HttpClient();
             using var response = await client.GetAsync(sourceUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
+            var totalBytes = response.Content.Headers.ContentLength;
             await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
             await using var fileStream = File.Create(targetPath);
-            await contentStream.CopyToAsync(fileStream, cancellationToken);
+
+            var buffer = new byte[81920];
+            long bytesReadTotal = 0;
+            int bytesRead;
+            while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
+            {
+                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                bytesReadTotal += bytesRead;
+                if (totalBytes is > 0)
+                {
+                    progress?.Report((double)bytesReadTotal / totalBytes.Value);
+                }
+            }
+
+            progress?.Report(1.0);
 
             return new DriverUpdateResult
             {

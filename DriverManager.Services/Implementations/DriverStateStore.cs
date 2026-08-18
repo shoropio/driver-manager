@@ -7,11 +7,14 @@ public sealed class DriverStateStore
 {
     public string StatePath { get; }
 
-    public DriverStateStore()
+    public DriverStateStore() : this(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DriverManager"))
     {
-        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DriverManager");
-        Directory.CreateDirectory(folder);
-        StatePath = Path.Combine(folder, "driver-state.json");
+    }
+
+    public DriverStateStore(string baseFolder)
+    {
+        Directory.CreateDirectory(baseFolder);
+        StatePath = Path.Combine(baseFolder, "driver-state.json");
     }
 
     public async Task<DriverStateSnapshot?> LoadAsync()

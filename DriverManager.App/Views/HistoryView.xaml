@@ -6,7 +6,7 @@
              xmlns:vm="clr-namespace:DriverManager.App.ViewModels"
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
              mc:Ignorable="d">
-    <Grid Margin="24">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -37,16 +37,34 @@
         </Grid>
 
         <Border Grid.Row="2" Margin="0,16,0,0" Style="{StaticResource CardBorderStyle}" Padding="0">
-            <TextBox Text="{Binding HistoryLog, Mode=OneWay}"
-                     IsReadOnly="True"
+            <ListBox ItemsSource="{Binding HistoryEntries}"
                      Background="#FF1B1B2A" BorderThickness="0"
-                     FontFamily="Consolas" FontSize="12"
-                     Foreground="#FFC9D3E6"
-                     TextWrapping="NoWrap"
-                     AcceptsReturn="True"
-                     VerticalScrollBarVisibility="Auto"
-                     HorizontalScrollBarVisibility="Auto"
-                     Padding="12" />
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.CanContentScroll="True"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="12,4" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock FontFamily="Consolas" FontSize="12" Foreground="#FFC9D3E6"
+                                   Text="{Binding}" TextWrapping="NoWrap" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Border>
     </Grid>
 </UserControl>

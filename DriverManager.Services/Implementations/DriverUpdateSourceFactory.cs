@@ -11,6 +11,7 @@ public static class DriverUpdateSourceFactory
         {
             "Nvidia" => new NvidiaDriverSource(),
             "Dell" => new DellDriverSource(settings.DellServiceTag, settings.DellAppId, logger),
+            "Intel" => new IntelDriverSource(logger),
             _ => new WindowsUpdateDriverSource()
         };
     }
@@ -18,7 +19,8 @@ public static class DriverUpdateSourceFactory
     public static bool InstallsPackages(AppSettings settings)
     {
         return !settings.UpdateSource.Equals("Nvidia", StringComparison.OrdinalIgnoreCase)
-            && !settings.UpdateSource.Equals("Dell", StringComparison.OrdinalIgnoreCase);
+            && !settings.UpdateSource.Equals("Dell", StringComparison.OrdinalIgnoreCase)
+            && !settings.UpdateSource.Equals("Intel", StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool RequiresConfiguration(AppSettings settings, out string error)

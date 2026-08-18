@@ -7,7 +7,7 @@
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="24">
+        <Grid Margin="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -32,8 +32,8 @@
             <Border Style="{StaticResource CardBorderStyle}">
                 <StackPanel>
                     <TextBlock FontSize="40" FontWeight="Bold"
-                               Text="{Binding Drivers.Count, StringFormat={}{0}}" />
-                    <TextBlock FontSize="13" Foreground="#FFA9ABBE" Text="Controladores instalados" />
+                               Text="{Binding FilteredDriversCount, StringFormat={}{0}}" />
+                    <TextBlock FontSize="13" Foreground="#FFA9ABBE" Text="Controladores (filtrados)" />
                 </StackPanel>
             </Border>
 

@@ -7,57 +7,182 @@
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="24">
+        <Grid Margin="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-        <StackPanel>
-            <TextBlock FontSize="24" FontWeight="Bold" Text="Descargas" />
-            <TextBlock Margin="0,6,0,0" FontSize="13" Foreground="#FFA9ABBE"
-                       Text="Descarga manual de controladores. Indica un nombre y la URL directa del instalador." />
-        </StackPanel>
-
-        <Border Grid.Row="1" Margin="0,20,0,0" Style="{StaticResource CardBorderStyle}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="240" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel>
-                    <TextBlock FontSize="12" Foreground="#FFA9ABBE" Text="Nombre del controlador" />
-                    <TextBox Margin="0,6,0,0" Text="{Binding DownloadName, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Nombre visible para la descarga" />
-                </StackPanel>
-
-                <StackPanel Grid.Column="2">
-                    <TextBlock FontSize="12" Foreground="#FFA9ABBE" Text="URL de descarga" />
-                    <TextBox Margin="0,6,0,0" Text="{Binding DownloadUrl, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="URL directa del instalador (.exe, .zip)" />
-                </StackPanel>
-
-                <Button Grid.Column="4" VerticalAlignment="Bottom" Style="{StaticResource ActionButtonStyle}"
-                        Content="Descargar" Command="{Binding DownloadCommand}" />
-            </Grid>
-        </Border>
-
-        <Border Grid.Row="2" Margin="0,16,0,0" Style="{StaticResource CardBorderStyle}">
             <StackPanel>
-                <TextBlock FontSize="16" FontWeight="Bold" Text="Carpeta de descargas" />
-                <TextBlock Margin="0,4,0,0" FontSize="13" Foreground="#FFA9ABBE"
-                           Text="Los archivos se guardan aquí. Puedes cambiar la ruta en Configuración." />
-                <TextBlock Margin="0,12,0,0" FontSize="13" Foreground="#FF7AC5FF"
-                           Text="{Binding DownloadsFolder}" TextWrapping="Wrap" />
-                <TextBlock Margin="0,16,0,0" FontSize="13" Foreground="#FF9ED27A"
-                           Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+                <TextBlock FontSize="24" FontWeight="Bold" Text="Descargas" />
+                <TextBlock Margin="0,6,0,0" FontSize="13" Foreground="#FFA9ABBE"
+                           Text="Gestiona tus descargas: cola, progreso, pausa, reanudar y cancelar." />
             </StackPanel>
-        </Border>
-    </Grid>
+
+            <Border Grid.Row="1" Margin="0,20,0,0" Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock FontSize="12" Foreground="#FFA9ABBE" Text="Nombre (opcional)" />
+                        <TextBox Margin="0,6,0,0"
+                                 Text="{Binding DownloadsVM.AddName, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Nombre descriptivo del controlador" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock FontSize="12" Foreground="#FFA9ABBE" Text="URL de descarga" />
+                        <TextBox Margin="0,6,0,0"
+                                 Text="{Binding DownloadsVM.AddUrl, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="URL directa del archivo (.exe, .cab, .zip)" />
+                    </StackPanel>
+
+                    <Button Grid.Column="4" VerticalAlignment="Bottom" Style="{StaticResource ActionButtonStyle}"
+                            Content="Agregar a la cola"
+                            Command="{Binding DownloadsVM.AddDownloadCommand}" />
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="2" Margin="0,20,0,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" FontSize="15" FontWeight="SemiBold"
+                               Text="Descargas activas" VerticalAlignment="Center" />
+                    <TextBlock DockPanel.Dock="Right" FontSize="12" Foreground="#FFA9ABBE"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Text="{Binding DownloadsVM.TotalSpeedText}" />
+                </DockPanel>
+            </StackPanel>
+
+            <Grid Grid.Row="3" Margin="0,10,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ItemsControl ItemsSource="{Binding DownloadsVM.ActiveDownloads}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,8" Padding="14,10">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                                    VerticalAlignment="Center" Margin="12,0,0,0">
+                                            <Button Style="{StaticResource ActionButtonStyle}" Content="Pausar"
+                                                    FontSize="11" Height="26" Padding="10,0"
+                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Command="{Binding DataContext.DownloadsVM.PauseDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Id}" />
+
+                                            <Button Style="{StaticResource ActionButtonStyle}" Content="Reanudar"
+                                                    FontSize="11" Height="26" Padding="10,0"
+                                                    Visibility="{Binding IsPausedOrFailed, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Command="{Binding DataContext.DownloadsVM.ResumeDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Id}" />
+
+                                            <Button Style="{StaticResource ActionButtonStyle}" Content="Cancelar"
+                                                    FontSize="11" Height="26" Padding="10,0" Margin="4,0,0,0"
+                                                    Foreground="#FFFF6B6B"
+                                                    Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Command="{Binding DataContext.DownloadsVM.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Id}" />
+                                        </StackPanel>
+
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock FontSize="13" FontWeight="SemiBold" Text="{Binding FileName}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock FontSize="11" Foreground="{Binding StatusForeground}"
+                                                           Text="{Binding StatusText}" FontWeight="SemiBold" />
+                                                <TextBlock FontSize="11" Foreground="#FF8B8FA6" Text="  |  "
+                                                           Visibility="{Binding SpeedText, Converter={StaticResource StringToVisibilityConverter}}" />
+                                                <TextBlock FontSize="11" Foreground="#FF8B8FA6" Text="{Binding SpeedText}" />
+                                                <TextBlock FontSize="11" Foreground="#FF8B8FA6" Text="  |  "
+                                                           Visibility="{Binding EtaText, Converter={StaticResource StringToVisibilityConverter}}" />
+                                                <TextBlock FontSize="11" Foreground="#FF8B8FA6" Text="{Binding EtaText}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ProgressBar Style="{StaticResource BrightProgressBar}"
+                                                     Value="{Binding Progress, Mode=OneWay}" Minimum="0" Maximum="100"
+                                                     Height="4" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" FontSize="11" Foreground="#FF8B8FA6"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0"
+                                                   Text="{Binding ReceivedText}" />
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="2" Margin="0,6,0,0" FontSize="11" Foreground="#FFFF6B6B"
+                                               Text="{Binding ErrorMessage}" TextWrapping="Wrap"
+                                               Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel Grid.Row="1" Margin="0,16,0,0">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" FontSize="15" FontWeight="SemiBold"
+                                   Text="Completadas" VerticalAlignment="Center" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource ActionButtonStyle}" Content="Limpiar"
+                                FontSize="11" Height="26" Padding="10,0"
+                                HorizontalAlignment="Right"
+                                Command="{Binding DownloadsVM.ClearCompletedCommand}"
+                                Visibility="{Binding DownloadsVM.HasCompleted, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </DockPanel>
+
+                    <ItemsControl Margin="0,10,0,0" ItemsSource="{Binding DownloadsVM.CompletedDownloads}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,6" Padding="14,8">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                                    VerticalAlignment="Center" Margin="12,0,0,0">
+                                            <TextBlock FontSize="11" Foreground="{Binding StatusForeground}"
+                                                       Text="{Binding StatusText}" FontWeight="SemiBold" />
+                                            <Button Style="{StaticResource ActionButtonStyle}" Content="Quitar"
+                                                    FontSize="11" Height="24" Padding="8,0" Margin="8,0,0,0"
+                                                    Command="{Binding DataContext.DownloadsVM.RemoveDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Id}" />
+                                        </StackPanel>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock FontSize="13" FontWeight="SemiBold" Text="{Binding FileName}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock FontSize="11" Foreground="#FF8B8FA6" Margin="0,3,0,0"
+                                                       Text="{Binding ReceivedText}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <TextBlock Grid.Row="0" Grid.RowSpan="2"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="#FFA9ABBE" FontSize="14"
+                           Text="{Binding DownloadsVM.EmptyMessage}"
+                           Visibility="{Binding DownloadsVM.HasAny, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+            </Grid>
+        </Grid>
     </ScrollViewer>
 </UserControl>

@@ -185,6 +185,37 @@ public sealed class DriverBackupService : IDriverBackupService
         }
     }
 
+    public Task<int> EnforceRetentionAsync(string backupFolder, int maxBackups, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() =>
+        {
+            if (maxBackups < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxBackups), "El número máximo de respaldos debe ser al menos 1.");
+            }
+
+            if (!Directory.Exists(backupFolder))
+            {
+                return 0;
+            }
+
+            var backups = Directory.EnumerateFiles(backupFolder, "DriverBackup_*.zip")
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .ToList();
+
+            var deleted = 0;
+            while (backups.Count > maxBackups)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                File.Delete(backups[0]);
+                backups.RemoveAt(0);
+                deleted++;
+            }
+
+            return deleted;
+        }, cancellationToken);
+    }
+
     private static IReadOnlyList<DriverInfo> ReadManifest(string backupPath, CancellationToken cancellationToken)
     {
         try

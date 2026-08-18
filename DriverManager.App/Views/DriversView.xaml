@@ -6,30 +6,7 @@
              xmlns:vm="clr-namespace:DriverManager.App.ViewModels"
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
              mc:Ignorable="d">
-    <UserControl.Resources>
-        <Style x:Key="ColumnHeaderTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FF8B8FA6" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        </Style>
-        <Style x:Key="RowTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFFFFFFF" />
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        </Style>
-        <Style x:Key="VersionTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFC9D3E6" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontFamily" Value="Consolas" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        </Style>
-    </UserControl.Resources>
-
-    <Grid Margin="24">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -66,49 +43,56 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="170" />
-                    <ColumnDefinition Width="140" />
-                    <ColumnDefinition Width="130" />
-                    <ColumnDefinition Width="130" />
-                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="3*" MinWidth="180" />
+                    <ColumnDefinition Width="2*" MinWidth="120" />
+                    <ColumnDefinition Width="1.5*" MinWidth="100" />
+                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                    <ColumnDefinition Width="1*" MinWidth="80" />
+                    <ColumnDefinition Width="1.5*" MinWidth="100" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.ColumnSpan="6" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1"
-                        Background="#FF26263C" Padding="12,10">
+                <Border Grid.ColumnSpan="7" Style="{StaticResource TableRowBorderStyle}" Background="#FF26263C">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="170" />
-                            <ColumnDefinition Width="140" />
-                            <ColumnDefinition Width="130" />
-                            <ColumnDefinition Width="130" />
-                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="1.5*" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="1.5*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Style="{StaticResource ColumnHeaderTextStyle}" Text="Dispositivo" />
-                        <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeaderTextStyle}" Text="Fabricante" />
-                        <TextBlock Grid.Column="2" Style="{StaticResource ColumnHeaderTextStyle}" Text="Categoría" />
-                        <TextBlock Grid.Column="3" Style="{StaticResource ColumnHeaderTextStyle}" Text="Versión instalada" />
-                        <TextBlock Grid.Column="4" Style="{StaticResource ColumnHeaderTextStyle}" Text="Versión disponible" />
-                        <TextBlock Grid.Column="5" Style="{StaticResource ColumnHeaderTextStyle}" Text="Estado" />
+                        <TextBlock Style="{StaticResource TableHeaderTextStyle}" Text="Dispositivo" ToolTip="Nombre del dispositivo" />
+                        <TextBlock Grid.Column="1" Style="{StaticResource TableHeaderTextStyle}" Text="Fabricante" ToolTip="Fabricante del dispositivo" />
+                        <TextBlock Grid.Column="2" Style="{StaticResource TableHeaderTextStyle}" Text="Categoría" ToolTip="Categoría del controlador" />
+                        <TextBlock Grid.Column="3" Style="{StaticResource TableHeaderTextStyle}" Text="Versión instalada" ToolTip="Versión actualmente instalada" />
+                        <TextBlock Grid.Column="4" Style="{StaticResource TableHeaderTextStyle}" Text="Versión disponible" ToolTip="Versión más reciente disponible" />
+                        <TextBlock Grid.Column="5" Style="{StaticResource TableHeaderTextStyle}" Text="Acción" ToolTip="Acción disponible" />
+                        <TextBlock Grid.Column="6" Style="{StaticResource TableHeaderTextStyle}" Text="Estado" ToolTip="Estado del controlador" />
                     </Grid>
                 </Border>
 
-                <ListBox Grid.Row="1" Grid.ColumnSpan="6"
+                <ListBox Grid.Row="1" Grid.ColumnSpan="7"
                          ItemsSource="{Binding DriversView}"
                          Background="Transparent" BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.CanContentScroll="True">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="0" />
                             <Setter Property="Margin" Value="0" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Background" Value="#FF26263C" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#FF32334B" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -122,74 +106,114 @@
                         <DataTemplate>
                             <Grid MinHeight="46">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="170" />
-                                    <ColumnDefinition Width="140" />
-                                    <ColumnDefinition Width="130" />
-                                    <ColumnDefinition Width="130" />
-                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="3*" MinWidth="180" />
+                                    <ColumnDefinition Width="2*" MinWidth="120" />
+                                    <ColumnDefinition Width="1.5*" MinWidth="100" />
+                                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                                    <ColumnDefinition Width="1.2*" MinWidth="90" />
+                                    <ColumnDefinition Width="1*" MinWidth="80" />
+                                    <ColumnDefinition Width="1.5*" MinWidth="100" />
                                 </Grid.ColumnDefinitions>
 
-                                <Border BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock Style="{StaticResource RowTextStyle}" FontWeight="SemiBold"
-                                               Text="{Binding DeviceName}" ToolTip="{Binding DeviceName}" />
+                                <Border Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconDrivers}" Width="14" Height="14" Stretch="Uniform"
+                                              StrokeThickness="1.2" Stroke="#FF8B8FA6" VerticalAlignment="Center" />
+                                        <TextBlock Style="{StaticResource TableRowTextStyle}" FontWeight="SemiBold"
+                                                   Margin="8,0,0,0" Text="{Binding DeviceName}"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding DeviceName}" />
+                                    </StackPanel>
                                 </Border>
 
-                                <Border Grid.Column="1" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock Style="{StaticResource RowTextStyle}"
-                                               Text="{Binding Manufacturer}" ToolTip="{Binding Manufacturer}" />
+                                <Border Grid.Column="1" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableRowTextStyle}"
+                                               Text="{Binding Manufacturer}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Manufacturer}" />
                                 </Border>
 
-                                <Border Grid.Column="2" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock Style="{StaticResource RowTextStyle}" Foreground="#FFA9ABBE"
-                                               Text="{Binding Category}" ToolTip="{Binding Category}" />
+                                <Border Grid.Column="2" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableRowTextStyle}" Foreground="#FFA9ABBE"
+                                               Text="{Binding Category}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Category}" />
                                 </Border>
 
-                                <Border Grid.Column="3" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock Style="{StaticResource VersionTextStyle}"
-                                               Text="{Binding InstalledVersion}" ToolTip="{Binding InstalledVersion}" />
+                                <Border Grid.Column="3" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableVersionTextStyle}"
+                                               Text="{Binding InstalledVersion}" TextTrimming="CharacterEllipsis" ToolTip="{Binding InstalledVersion}" />
                                 </Border>
 
-                                <Border Grid.Column="4" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock Style="{StaticResource VersionTextStyle}" Foreground="#FF9ED27A"
-                                               Text="{Binding AvailableVersion}" ToolTip="{Binding AvailableVersion}" />
+                                <Border Grid.Column="4" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <TextBlock Style="{StaticResource TableVersionTextStyle}" Foreground="#FF9ED27A"
+                                               Text="{Binding AvailableVersion}" TextTrimming="CharacterEllipsis" ToolTip="{Binding AvailableVersion}" />
                                 </Border>
 
-                                <Border Grid.Column="5" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1" Padding="12,8">
-                                    <TextBlock Text="{Binding StatusText}" ToolTip="{Binding StatusText}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock" BasedOn="{StaticResource RowTextStyle}">
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Status}" Value="Installed">
-                                                        <Setter Property="Foreground" Value="#FFA9ABBE" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Status}" Value="UpToDate">
-                                                        <Setter Property="Foreground" Value="#FF9ED27A" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Status}" Value="UpdateAvailable">
-                                                        <Setter Property="Foreground" Value="#FFFFB454" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Status}" Value="ProblemDetected">
-                                                        <Setter Property="Foreground" Value="#FFFF6B6B" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Status}" Value="BackupAvailable">
-                                                        <Setter Property="Foreground" Value="#FF7AC5FF" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Status}" Value="Unknown">
-                                                        <Setter Property="Foreground" Value="#FF8B8FA6" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                <Border Grid.Column="5" Style="{StaticResource TableRowBorderStyle}" Padding="8,6">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="Instalar"
+                                                Command="{Binding DataContext.InstallDriverCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DriverInfo.HasUpdate}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <TextBlock Text="—" ToolTip="Sin actualización disponible">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TableRowTextStyle}">
+                                                    <Setter Property="Foreground" Value="#FF5A6072" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DriverInfo.HasUpdate}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="6" Style="{StaticResource TableRowBorderStyle}" Padding="12,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Style="{StaticResource StatusDotStyle}" />
+                                        <TextBlock Text="{Binding StatusText}" ToolTip="{Binding StatusText}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TableRowTextStyle}">
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Installed">
+                                                            <Setter Property="Foreground" Value="#FFA9ABBE" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="UpToDate">
+                                                            <Setter Property="Foreground" Value="#FF9ED27A" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="UpdateAvailable">
+                                                            <Setter Property="Foreground" Value="#FFFFB454" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="ProblemDetected">
+                                                            <Setter Property="Foreground" Value="#FFFF6B6B" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="BackupAvailable">
+                                                            <Setter Property="Foreground" Value="#FF7AC5FF" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Unknown">
+                                                            <Setter Property="Foreground" Value="#FF8B8FA6" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
                                 </Border>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <TextBlock Grid.Row="1" Grid.ColumnSpan="6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="7" HorizontalAlignment="Center" VerticalAlignment="Center"
                            Foreground="#FFA9ABBE" FontSize="14"
                            Text="No hay controladores para mostrar. Pulsa Escanear para detectarlos.">
                     <TextBlock.Style>

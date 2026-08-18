@@ -7,10 +7,83 @@
         xmlns:views="clr-namespace:DriverManager.App.Views"
         mc:Ignorable="d"
         Title="Driver Manager" Height="720" Width="1200" MinHeight="720" MinWidth="1000"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen" Icon="Assets/app.ico">
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
+
+    <Window.Resources>
+        <Style x:Key="NavDashboard" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Dashboard">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavDrivers" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Drivers">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavGpu" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Gpu">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavSystem" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="System">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavUpdates" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Updates">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavDownloads" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Downloads">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavBackups" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Backups">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavRestore" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Restore">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavHistory" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="History">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="NavSettings" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Settings">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
 
     <Grid Background="#FF1E1E2E">
         <Grid.ColumnDefinitions>
@@ -18,7 +91,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="#FF252538" Padding="16" CornerRadius="16" Margin="0,0,16,0">
+        <Border Grid.Column="0" Background="#FF252538" Padding="16" Margin="0,16,16,16">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -26,33 +99,122 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <StackPanel>
-                    <TextBlock Text="Driver Manager" Foreground="#FFFFFFFF" FontSize="20" FontWeight="Bold" Margin="0,0,0,2" />
-                    <TextBlock Text="Controladores y actualizaciones" Foreground="#FF9AA1B3" FontSize="11" Margin="0,0,0,24" />
+                <StackPanel Orientation="Horizontal" Margin="4,0,0,20">
+                    <Border Width="38" Height="38" CornerRadius="0" Background="#FF252538"
+                            BorderBrush="#FF3D3F60" BorderThickness="1">
+                        <Image Source="Assets/app.ico" Width="30" Height="30" Stretch="Uniform"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Border>
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center" MaxWidth="170">
+                        <TextBlock Text="Driver Manager" Foreground="#FFFFFFFF" FontSize="17" FontWeight="Bold"
+                                   TextWrapping="NoWrap" />
+                        <TextBlock Text="Controladores y actualizaciones" Foreground="#FF9AA1B3" FontSize="10"
+                                   Margin="0,2,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1">
-                    <Button Content="Inicio" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="Dashboard" />
-                    <Button Content="Controladores" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="Drivers" />
-                    <Button Content="Actualizaciones" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="Updates" />
-                    <Button Content="Descargas" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="Downloads" />
-                    <Button Content="Respaldos" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="Backups" />
-                    <Button Content="Restauración" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="Restore" />
-                    <Button Content="Historial" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="History" />
-                    <Button Content="Configuración" Style="{StaticResource NavButtonStyle}" Margin="0,0,0,8"
-                            Command="{Binding NavigateCommand}" CommandParameter="Settings" />
+                    <Button Style="{StaticResource NavDashboard}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Dashboard">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconHome}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Inicio" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavDrivers}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Drivers">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconDrivers}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Controladores" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavGpu}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Gpu">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconGpu}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Tarjetas gráficas" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavSystem}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="System">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconSystem}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Equipo" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavUpdates}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Updates">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconUpdates}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Actualizaciones" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavDownloads}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Downloads">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconDownloads}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Descargas" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavBackups}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Backups">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconBackups}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Respaldos" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavRestore}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Restore">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconRestore}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Restauración" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavHistory}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="History">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconHistory}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Historial" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavSettings}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Settings">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Configuración" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
-
-                <Border Grid.Row="2" Background="#FF1E1E2E" CornerRadius="10" Padding="12,10">
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="#FF9AA1B3" FontSize="11" TextWrapping="Wrap" />
-                </Border>
             </Grid>
         </Border>
 
@@ -63,41 +225,51 @@
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" ClipToBounds="True">
-                <views:DashboardView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Dashboard}" />
-                <views:DriversView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Drivers}" />
-                <views:UpdatesView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Updates}" />
-                <views:DownloadsView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Downloads}" />
-                <views:BackupsView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Backups}" />
-                <views:RestoreView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Restore}" />
-                <views:HistoryView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=History}" />
-                <views:SettingsView
-                    Visibility="{Binding SelectedPage, Converter={StaticResource EnumToVisibility}, ConverterParameter=Settings}" />
+                <ContentControl Content="{Binding SelectedPage}"
+                                ContentTemplateSelector="{StaticResource ViewTemplateSelector}" />
+                <Border Background="#801E1E2E" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Path Data="M24 4 A20 20 0 1 1 23.99 3.99"
+                              Stroke="#FF3B82F6" StrokeThickness="3"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              StrokeDashArray="50 25"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              Width="48" Height="48" Stretch="Uniform">
+                            <Path.RenderTransform>
+                                <RotateTransform CenterX="0.5" CenterY="0.5" />
+                            </Path.RenderTransform>
+                            <Path.Triggers>
+                                <EventTrigger RoutedEvent="Path.Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
+                                                             From="0" To="360" Duration="0:0:1" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Path.Triggers>
+                        </Path>
+                    </Grid>
+                </Border>
             </Grid>
 
-            <Border Grid.Row="1" Height="52" Background="#FF252538" CornerRadius="16"
-                    Padding="16,0" Margin="0,16,0,0">
-                <Grid VerticalAlignment="Center">
+            <Border Grid.Row="1" Background="#FF252538" CornerRadius="0"
+                    Padding="16,12" Margin="0,16,0,0" MinHeight="44">
+                <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Controladores con atención:" Foreground="#FF9AA1B3" FontSize="12"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding AttentionCount}" Foreground="#FFFF6B6B" FontSize="14" FontWeight="Bold"
-                                   VerticalAlignment="Center" Margin="6,0,0,0" />
-                    </StackPanel>
+                    <TextBlock Grid.Column="0" FontSize="11" TextWrapping="Wrap"
+                               HorizontalAlignment="Left" VerticalAlignment="Center"
+                               Text="{Binding StatusMessage}"
+                               Foreground="{Binding StatusForeground, Converter={StaticResource StringToBrushConverter}}"
+                               Visibility="{Binding IsStatusVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
                     <TextBlock Grid.Column="1" Text="© 2026 Shoropio Corporation. Todos los derechos reservados."
-                               Foreground="#FF9AA1B3" FontSize="12" VerticalAlignment="Center"
-                               TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                               Foreground="#FF9AA1B3" FontSize="12"
+                               VerticalAlignment="Center" HorizontalAlignment="Right" />
                 </Grid>
             </Border>
         </Grid>

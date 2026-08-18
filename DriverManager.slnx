@@ -2,4 +2,5 @@
   <Project Path="DriverManager.App/DriverManager.App.csproj" />
   <Project Path="DriverManager.Core/DriverManager.Core.csproj" />
   <Project Path="DriverManager.Services/DriverManager.Services.csproj" />
+  <Project Path="DriverManager.Tests/DriverManager.Tests.csproj" />
 </Solution>

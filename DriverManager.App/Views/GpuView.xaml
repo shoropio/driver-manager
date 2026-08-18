@@ -1,0 +1,192 @@
+<UserControl x:Class="DriverManager.App.Views.GpuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:DriverManager.App.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+             mc:Ignorable="d">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock FontSize="24" FontWeight="Bold" Text="Tarjetas gráficas" />
+            <TextBlock Margin="0,6,0,0" FontSize="13" Foreground="#FFA9ABBE"
+                       Text="Detalle, estado del controlador, software exclusivo y telemetría en vivo (uso, temperatura y memoria) de cada GPU del equipo." />
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="13" Foreground="#FFA9ABBE"
+                           Text="GPUs detectadas: " />
+                <TextBlock FontSize="13" Foreground="#FF7AC5FF"
+                           Text="{Binding Gpus.Count, StringFormat={}{0}}" />
+            </StackPanel>
+
+            <Button Grid.Column="1" Style="{StaticResource ActionButtonStyle}" Content="Analizar tarjetas gráficas"
+                    Command="{Binding ScanGpusCommand}" />
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Gpus}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" MinWidth="300" MaxWidth="450" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel>
+                                        <TextBlock FontSize="16" FontWeight="Bold" Text="{Binding AdapterName}"
+                                                   TextWrapping="Wrap" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                            <TextBlock FontSize="12.5" Foreground="#FF7AC5FF" Text="{Binding Vendor}" />
+                                            <TextBlock FontSize="12.5" Foreground="#FF8B8FA6" Text="  ·  " />
+                                            <TextBlock FontSize="12.5" FontWeight="SemiBold" Text="{Binding StatusText}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#FF8B8FA6" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding GpuInfo.Status}" Value="UpdateAvailable">
+                                                                <Setter Property="Foreground" Value="#FFE9B55C" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding GpuInfo.Status}" Value="ProblemDetected">
+                                                                <Setter Property="Foreground" Value="#FFFF6B6B" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding GpuInfo.Status}" Value="UpToDate">
+                                                                <Setter Property="Foreground" Value="#FF6BD39C" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <TextBlock Margin="0,12,0,0" FontSize="12.5" Foreground="#FFA9ABBE"
+                                                   TextWrapping="Wrap" Text="{Binding VideoProcessor}" />
+                                        <TextBlock Margin="0,4,0,0" FontSize="12.5" Foreground="#FFA9ABBE"
+                                                   TextWrapping="Wrap" Text="{Binding VideoMode}" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                            <TextBlock FontSize="12.5" FontWeight="SemiBold"
+                                                       Text="{Binding UtilizationText}" />
+                                            <TextBlock FontSize="12.5" Foreground="#FF8B8FA6" Text="  ·  " />
+                                            <TextBlock FontSize="12.5" FontWeight="SemiBold"
+                                                       Text="{Binding TemperatureText}" />
+                                            <TextBlock FontSize="12.5" Foreground="#FF8B8FA6" Text="  ·  " />
+                                            <TextBlock FontSize="12.5" Foreground="#FFA9ABBE"
+                                                       Text="{Binding MemoryText}" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <Grid Grid.Column="1" Margin="24,0,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock FontSize="12" Foreground="#FF8B8FA6" Text="Versión del controlador" />
+                                        <TextBlock Grid.Column="1" FontSize="12.5" Text="{Binding DriverVersion}"
+                                                   TextWrapping="Wrap" />
+
+                                        <TextBlock Grid.Row="1" Margin="0,8,0,0" FontSize="12" Foreground="#FF8B8FA6" Text="Fecha del controlador" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Margin="8,8,0,0" FontSize="12.5"
+                                                   Text="{Binding DriverDate}" />
+
+                                        <TextBlock Grid.Row="2" Margin="0,8,0,0" FontSize="12" Foreground="#FF8B8FA6" Text="Memoria de vídeo" />
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Margin="8,8,0,0" FontSize="12.5"
+                                                   Text="{Binding AdapterRam}" />
+
+                                        <TextBlock Grid.Row="3" Margin="0,8,0,0" FontSize="12" Foreground="#FF8B8FA6" Text="Uso de la GPU" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Margin="8,8,0,0" FontSize="12.5"
+                                                   Text="{Binding UtilizationText}" />
+
+                                        <TextBlock Grid.Row="4" Margin="0,8,0,0" FontSize="12" Foreground="#FF8B8FA6" Text="Temperatura" />
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Margin="8,8,0,0" FontSize="12.5"
+                                                   Text="{Binding TemperatureText}" />
+                                    </Grid>
+
+                                    <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,16,0,0"
+                                            BorderBrush="#FF2D2D43" BorderThickness="0,1,0,0" Padding="0,14,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel>
+                                                <TextBlock FontSize="12" Foreground="#FF8B8FA6" Text="Software compañero" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <TextBlock FontSize="12.5" FontWeight="SemiBold"
+                                                               Text="{Binding SoftwareName}" TextWrapping="Wrap" />
+                                                    <TextBlock FontSize="12.5" Foreground="#FFA9ABBE" Text="  ·  " />
+                                                    <TextBlock FontSize="12.5" Foreground="#FFA9ABBE"
+                                                               Text="{Binding SoftwareStatusText}" />
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <Button Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Content="Abrir página de descarga"
+                                                    Command="{Binding DataContext.OpenUrlCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding SoftwareDownloadUrl}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasSoftware}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock TextAlignment="Center" Foreground="#FFA9ABBE" FontSize="14"
+                           Text="No hay información de tarjetas gráficas todavía. Presiona &quot;Analizar tarjetas gráficas&quot; para comenzar.">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Gpus.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

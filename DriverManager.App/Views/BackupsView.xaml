@@ -13,7 +13,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -55,7 +55,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="240" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="170" />
                     <ColumnDefinition Width="120" />
@@ -64,12 +64,12 @@
                 <Border Grid.ColumnSpan="4" BorderBrush="#FF2D2D43" BorderThickness="0,0,0,1"
                         Background="#FF26263C" Padding="12,10">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="170" />
-                            <ColumnDefinition Width="120" />
-                        </Grid.ColumnDefinitions>
+<Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="240" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="120" />
+                    </Grid.ColumnDefinitions>
 
                         <TextBlock Foreground="#FF8B8FA6" FontSize="12" FontWeight="Bold" Text="Respaldo" />
                         <TextBlock Grid.Column="1" Foreground="#FF8B8FA6" FontSize="12" FontWeight="Bold" Text="Ubicación" />
@@ -78,12 +78,13 @@
                     </Grid>
                 </Border>
 
-                <Grid Grid.Row="1" Grid.ColumnSpan="4">
+<Grid Grid.Row="1" Grid.ColumnSpan="4">
                     <ListBox ItemsSource="{Binding Backups}"
-                             SelectedItem="{Binding SelectedBackup}"
-                             Background="Transparent" BorderThickness="0"
-                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                             ScrollViewer.VerticalScrollBarVisibility="Auto">
+                              SelectedItem="{Binding SelectedBackup}"
+                              Background="Transparent" BorderThickness="0"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.CanContentScroll="True">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
                                 <Setter Property="Padding" Value="0" />
@@ -104,7 +105,7 @@
                             <DataTemplate>
                                 <Grid MinHeight="46">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="240" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="170" />
                                         <ColumnDefinition Width="120" />

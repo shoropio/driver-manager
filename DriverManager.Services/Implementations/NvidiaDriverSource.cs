@@ -25,7 +25,7 @@ public sealed class NvidiaDriverSource : IDriverUpdateSource
     public NvidiaDriverSource(IDriverScanner scanner)
     {
         _scanner = scanner;
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
         _http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) DriverManager/1.0");
     }
 
@@ -128,7 +128,12 @@ public sealed class NvidiaDriverSource : IDriverUpdateSource
 
     private async Task<string?> FindProductIdAsync(string gpuName, CancellationToken cancellationToken)
     {
-        var xml = await _http.GetStringAsync(LookupUrl, cancellationToken);
+        var xml = await GetStringWithRetryAsync(LookupUrl, cancellationToken);
+        if (xml is null)
+        {
+            return null;
+        }
+
         var document = XDocument.Parse(xml);
         var candidates = document.Descendants("LookupValue")
             .Where(e => e.Element("Name") is not null && e.Element("Value") is not null)
@@ -151,7 +156,12 @@ public sealed class NvidiaDriverSource : IDriverUpdateSource
     private async Task<NvidiaDriverInfo?> GetLatestDriverAsync(string productId, CancellationToken cancellationToken)
     {
         var url = $"{DriverApiUrl}?func=DriverManualLookup&pfid={Uri.EscapeDataString(productId)}&osID={Windows10Or11X64OsId}&languageCode=1033&isWHQL=1&dch=1&sort1=0&numberOfResults=1";
-        var json = await _http.GetStringAsync(url, cancellationToken);
+        var json = await GetStringWithRetryAsync(url, cancellationToken);
+        if (json is null)
+        {
+            return null;
+        }
+
         using var document = JsonDocument.Parse(json);
 
         if (!document.RootElement.TryGetProperty("IDS", out var ids) || ids.GetArrayLength() == 0)
@@ -174,6 +184,30 @@ public sealed class NvidiaDriverSource : IDriverUpdateSource
             FileSize = GetString(downloadInfo, "DownloadURLFileSize"),
             ReleaseDate = GetString(downloadInfo, "ReleaseDateTime")
         };
+    }
+
+    private async Task<string?> GetStringWithRetryAsync(string url, CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            try
+            {
+                return await _http.GetStringAsync(url, cancellationToken);
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                if (attempt < 2)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+                }
+            }
+            catch (HttpRequestException) when (attempt < 2)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+        }
+
+        return null;
     }
 
     private static string GetString(JsonElement element, string propertyName)
