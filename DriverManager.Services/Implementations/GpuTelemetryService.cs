@@ -14,7 +14,7 @@ public sealed class GpuTelemetryService : IGpuTelemetryService
 {
     private readonly IGpuTemperatureProvider[] _temperatureProviders;
 
-    public GpuTelemetryService() : this(new NvidiaTemperatureProvider())
+    public GpuTelemetryService() : this(new NvidiaTemperatureProvider(), new AmdTemperatureProvider(), new IntelTemperatureProvider())
     {
     }
 
@@ -206,8 +206,7 @@ public sealed class GpuTelemetryService : IGpuTelemetryService
         return false;
     }
 
-    private static string Normalize(string value) =>
-        new(value.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+    private static string Normalize(string value) => DriverManager.Core.StringHelper.Normalize(value);
 
     internal readonly record struct GpuMemoryReading(long Usage);
 }

@@ -207,10 +207,5 @@ public sealed class WindowsUpdateDriverSource : IDriverUpdateSource
         return string.Join(Environment.NewLine, messages);
     }
 
-    private static bool IsAdministrator()
-    {
-        using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-        var principal = new System.Security.Principal.WindowsPrincipal(identity);
-        return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
-    }
+    private static bool IsAdministrator() => DriverManager.Core.PlatformHelper.IsAdministrator();
 }

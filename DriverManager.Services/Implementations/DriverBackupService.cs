@@ -302,22 +302,9 @@ public sealed class DriverBackupService : IDriverBackupService
         return null;
     }
 
-    private static bool IsAdministrator()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-            var principal = new System.Security.Principal.WindowsPrincipal(identity);
-            return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
-        }
+    private static bool IsAdministrator() => DriverManager.Core.PlatformHelper.IsAdministrator();
 
-        return false;
-    }
-
-    private static bool IsPnpSuccess(int exitCode)
-    {
-        return exitCode is 0 or 259;
-    }
+    private static bool IsPnpSuccess(int exitCode) => DriverManager.Core.PlatformHelper.IsPnpSuccess(exitCode);
 
     private static void TryDelete(string path)
     {

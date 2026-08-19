@@ -276,10 +276,7 @@ public sealed class NvidiaDriverSource : IDriverUpdateSource
         return result;
     }
 
-    private static string Normalize(string value)
-    {
-        return new string(value.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
-    }
+    private static string Normalize(string value) => DriverManager.Core.StringHelper.Normalize(value);
 
     private sealed class NvidiaDriverInfo
     {

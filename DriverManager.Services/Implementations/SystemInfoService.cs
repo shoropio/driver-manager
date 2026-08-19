@@ -284,22 +284,6 @@ public sealed class SystemInfoService : ISystemInfoService
         return values.Count == 0 ? NoInfo : string.Join(Environment.NewLine, values);
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes <= 0)
-        {
-            return NoInfo;
-        }
-
-        double value = bytes;
-        var unitIndex = 0;
-        string[] units = { "bytes", "KB", "MB", "GB", "TB" };
-        while (value >= 1024 && unitIndex < units.Length - 1)
-        {
-            value /= 1024;
-            unitIndex++;
-        }
-
-        return $"{value:0.#} {units[unitIndex]}";
-    }
+    private static string FormatBytes(long bytes) =>
+        DriverManager.Core.FormatHelper.FormatBytes(bytes, NoInfo);
 }

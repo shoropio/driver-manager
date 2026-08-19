@@ -11,14 +11,16 @@ public sealed class DownloadsViewModel : ObservableObject
 {
     private readonly DownloadManager _downloadManager;
     private readonly ILogger _logger;
+    private readonly string _downloadsFolder;
     private readonly Dictionary<string, DownloadItemViewModel> _vmMap = new();
     private string _addName = string.Empty;
     private string _addUrl = string.Empty;
 
-    public DownloadsViewModel(DownloadManager downloadManager, ILogger logger)
+    public DownloadsViewModel(DownloadManager downloadManager, ILogger logger, string downloadsFolder)
     {
         _downloadManager = downloadManager;
         _logger = logger;
+        _downloadsFolder = downloadsFolder;
 
         ActiveDownloads = new ObservableCollection<DownloadItemViewModel>();
         CompletedDownloads = new ObservableCollection<DownloadItemViewModel>();
@@ -73,8 +75,7 @@ public sealed class DownloadsViewModel : ObservableObject
     public ICommand RemoveDownloadCommand { get; }
     public ICommand ClearCompletedCommand { get; }
 
-    public string DownloadsFolder =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DriverManagerDownloads");
+    public string DownloadsFolder => _downloadsFolder;
 
     public void EnqueueFromUpdate(string url, string fileName, string deviceName,
         string installedVersion, string availableVersion, string source)

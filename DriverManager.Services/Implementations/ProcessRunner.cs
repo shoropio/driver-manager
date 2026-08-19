@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Threading;
 
 namespace DriverManager.Services.Implementations;
 
@@ -15,21 +14,14 @@ internal static class ProcessRunner
             CreateNoWindow = true
         };
 
-        return await Task.Run(() =>
-        {
-            using var process = Process.Start(processStartInfo) ?? throw new InvalidOperationException("No se pudo iniciar el proceso.");
-            using var outputReader = process.StandardOutput;
-            using var errorReader = process.StandardError;
+        using var process = Process.Start(processStartInfo) ?? throw new InvalidOperationException("No se pudo iniciar el proceso.");
 
-            while (!process.HasExited)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                Thread.Sleep(50);
-            }
+        var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        await process.WaitForExitAsync(cancellationToken);
 
-            var output = outputReader.ReadToEnd();
-            output += errorReader.ReadToEnd();
-            return (process.ExitCode, output);
-        }, cancellationToken);
+        var output = await outputTask;
+        output += await errorTask;
+        return (process.ExitCode, output);
     }
 }

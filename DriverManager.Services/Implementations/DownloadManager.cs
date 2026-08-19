@@ -152,7 +152,7 @@ public sealed class DownloadManager : IDisposable
         lock (_lock)
         {
             var item = _items.FirstOrDefault(i => i.Id == itemId);
-            if (item is null || item.Status != DownloadStatus.Paused && item.Status != DownloadStatus.Failed)
+            if (item is null || (item.Status != DownloadStatus.Paused && item.Status != DownloadStatus.Failed))
             {
                 return;
             }
@@ -383,7 +383,7 @@ public sealed class DownloadManager : IDisposable
             }
             catch (OperationCanceledException)
             {
-                if (item.Status != DownloadStatus.Paused)
+                if (item.Status != DownloadStatus.Paused && item.Status != DownloadStatus.Cancelled)
                 {
                     item.Status = DownloadStatus.Failed;
                     item.ErrorMessage = "Descarga cancelada.";
@@ -537,19 +537,7 @@ public sealed class DownloadManager : IDisposable
         }
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        double value = bytes;
-        int unit = 0;
-        while (value >= 1024 && unit < units.Length - 1)
-        {
-            value /= 1024;
-            unit++;
-        }
-
-        return $"{value:0.#} {units[unit]}";
-    }
+    private static string FormatBytes(long bytes) => DriverManager.Core.FormatHelper.FormatBytes(bytes, "0 B");
 
     public void Dispose()
     {

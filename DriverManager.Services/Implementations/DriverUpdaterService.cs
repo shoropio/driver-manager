@@ -158,27 +158,14 @@ public sealed class DriverUpdaterService : IDriverUpdater
         return null;
     }
 
-    private static bool IsAdministrator()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-            var principal = new System.Security.Principal.WindowsPrincipal(identity);
-            return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
-        }
-
-        return false;
-    }
+    private static bool IsAdministrator() => DriverManager.Core.PlatformHelper.IsAdministrator();
 
     private static string EscapePowerShellString(string text)
     {
         return text.Replace("'", "''");
     }
 
-    private static bool IsPnpSuccess(int exitCode)
-    {
-        return exitCode is 0 or 259;
-    }
+    private static bool IsPnpSuccess(int exitCode) => DriverManager.Core.PlatformHelper.IsPnpSuccess(exitCode);
 
     private static bool RequiresReboot(string output)
     {

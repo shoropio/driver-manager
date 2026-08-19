@@ -146,13 +146,5 @@ public sealed class GpuInfoService : IGpuInfoService
         }
     }
 
-    private static bool AdapterNamesMatch(string a, string b)
-    {
-        var normalizedA = Normalize(a);
-        var normalizedB = Normalize(b);
-        return normalizedA.Length >= 6 && (normalizedA.Contains(normalizedB) || normalizedB.Contains(normalizedA));
-    }
-
-    private static string Normalize(string value) =>
-        new(value.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+    private static bool AdapterNamesMatch(string a, string b) => DriverManager.Core.StringHelper.DeviceNamesMatch(a, b);
 }

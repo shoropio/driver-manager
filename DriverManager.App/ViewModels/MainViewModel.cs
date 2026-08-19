@@ -64,7 +64,7 @@ public sealed class MainViewModel : ObservableObject
         var stateDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DriverManager");
         Directory.CreateDirectory(stateDir);
         _downloadManager = new DownloadManager(Path.Combine(stateDir, "downloads.json"), 3, _logger);
-        DownloadsVM = new DownloadsViewModel(_downloadManager, _logger);
+        DownloadsVM = new DownloadsViewModel(_downloadManager, _logger, downloadsDir);
 
         BackupFolder = _settings.ResolveBackupFolder();
         DownloadsFolder = downloadsDir;
@@ -488,16 +488,15 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private bool _telemetryRefreshInProgress;
+    private int _telemetryRefreshInProgress;
 
     public async Task RefreshTelemetryAsync()
     {
-        if (Gpus.Count == 0 || _telemetryRefreshInProgress)
+        if (Gpus.Count == 0 || Interlocked.CompareExchange(ref _telemetryRefreshInProgress, 1, 0) != 0)
         {
             return;
         }
 
-        _telemetryRefreshInProgress = true;
         try
         {
             var targets = Gpus.ToArray();
@@ -513,7 +512,7 @@ public sealed class MainViewModel : ObservableObject
         }
         finally
         {
-            _telemetryRefreshInProgress = false;
+            Interlocked.Exchange(ref _telemetryRefreshInProgress, 0);
         }
     }
 
@@ -657,6 +656,19 @@ public sealed class MainViewModel : ObservableObject
             : "No se encontraron URLs de descarga válidas.";
         _logger.Log($"Actualizaciones encoladas: {enqueued}.");
 
+        if (enqueued > 0)
+        {
+            try
+            {
+                StatusMessage = "Creando punto de restauración antes de instalar actualizaciones...";
+                await _updater.CreateRestorePointAsync("DriverManager: antes de instalar actualizaciones");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error al crear punto de restauración automático.", ex);
+            }
+        }
+
         await Task.CompletedTask;
     }
 
@@ -689,6 +701,16 @@ public sealed class MainViewModel : ObservableObject
                 LatestBackup = backup.CreatedAt.ToString("g");
                 StatusMessage = $"Respaldo creado ({backup.Drivers.Count} controladores): {backup.BackupPath}.";
                 _logger.Log($"Respaldo de controladores creado: {backup.BackupPath}.");
+
+                if (_settings.MaxBackups > 0)
+                {
+                    var deleted = await _backupService.EnforceRetentionAsync(BackupFolder, _settings.MaxBackups);
+                    if (deleted > 0)
+                    {
+                        _logger.Log($"Retención de respaldos: {deleted} respaldo(s) antiguo(s) eliminado(s).");
+                    }
+                }
+
                 await RefreshBackupsAsync();
             }
             catch (Exception ex)
@@ -1024,17 +1046,9 @@ public sealed class MainViewModel : ObservableObject
         await _stateStore.SaveAsync(snapshot);
     }
 
-    private static bool DeviceNamesMatch(string a, string b)
-    {
-        var normalizedA = Normalize(a);
-        var normalizedB = Normalize(b);
-        return normalizedA.Length >= 6 && (normalizedA.Contains(normalizedB) || normalizedB.Contains(normalizedA));
-    }
+    private static bool DeviceNamesMatch(string a, string b) => DriverManager.Core.StringHelper.DeviceNamesMatch(a, b);
 
-    private static string Normalize(string value)
-    {
-        return new string(value.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
-    }
+    private static string Normalize(string value) => DriverManager.Core.StringHelper.Normalize(value);
 
     private void ResetDriverUpdateStatuses()
     {

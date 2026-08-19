@@ -43,19 +43,7 @@ public sealed class GpuViewModel : ObservableObject
         _ => "Desconocido"
     };
 
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes <= 0) return "—";
-        string[] units = { "B", "KB", "MB", "GB", "TB" };
-        double value = bytes;
-        int unit = 0;
-        while (value >= 1024 && unit < units.Length - 1)
-        {
-            value /= 1024;
-            unit++;
-        }
-        return $"{value:0.#} {units[unit]}";
-    }
+    private static string FormatBytes(long bytes) => DriverManager.Core.FormatHelper.FormatBytes(bytes, "—");
 
     public void RefreshTelemetry() => OnPropertyChanged(nameof(UtilizationText), nameof(TemperatureText), nameof(MemoryText));
     public void Refresh() => OnPropertyChanged(string.Empty);
