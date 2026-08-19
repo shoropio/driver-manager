@@ -298,63 +298,78 @@ public sealed class DownloadManager : IDisposable
                     item.ReceivedBytes = 0;
                 }
 
-                await using var contentStream = await response.Content.ReadAsStreamAsync(ct);
-                var mode = item.ReceivedBytes > 0 ? FileMode.Append : FileMode.Create;
-                await using var fileStream = new FileStream(item.TempFilePath, mode, FileAccess.Write, FileShare.None, 81920, true);
-
-                var buffer = new byte[81920];
-                long bytesReadSession = 0;
-                var speedSamples = new Queue<(long bytes, DateTime time)>();
-                var lastReport = DateTime.UtcNow;
-                int bytesRead;
-
-                while ((bytesRead = await contentStream.ReadAsync(buffer, ct)) > 0)
+                await using (var contentStream = await response.Content.ReadAsStreamAsync(ct))
                 {
-                    pause.Wait(ct);
-
-                    await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), ct);
-                    item.ReceivedBytes += bytesRead;
-                    bytesReadSession += bytesRead;
-
-                    var now = DateTime.UtcNow;
-                    speedSamples.Enqueue((bytesRead, now));
-                    while (speedSamples.Count > 10)
+                    var mode = item.ReceivedBytes > 0 ? FileMode.Append : FileMode.Create;
+                    await using (var fileStream = new FileStream(item.TempFilePath, mode, FileAccess.Write, FileShare.None, 81920, true))
                     {
-                        speedSamples.Dequeue();
-                    }
+                        var buffer = new byte[81920];
+                        long bytesReadSession = 0;
+                        var speedSamples = new Queue<(long bytes, DateTime time)>();
+                        var lastReport = DateTime.UtcNow;
+                        int bytesRead;
 
-                    if ((now - lastReport).TotalMilliseconds >= 500 || bytesReadSession >= 1048576)
-                    {
-                        if (speedSamples.Count >= 2)
+                        while ((bytesRead = await contentStream.ReadAsync(buffer, ct)) > 0)
                         {
-                            var totalBytes = speedSamples.Sum(s => s.bytes);
-                            var totalTime = (speedSamples.Last().time - speedSamples.First().time).TotalSeconds;
-                            if (totalTime > 0)
+                            pause.Wait(ct);
+
+                            await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), ct);
+                            item.ReceivedBytes += bytesRead;
+                            bytesReadSession += bytesRead;
+
+                            var now = DateTime.UtcNow;
+                            speedSamples.Enqueue((bytesRead, now));
+                            while (speedSamples.Count > 10)
                             {
-                                item.SpeedBytesPerSec = totalBytes / totalTime;
+                                speedSamples.Dequeue();
                             }
+
+                            if ((now - lastReport).TotalMilliseconds >= 500 || bytesReadSession >= 1048576)
+                            {
+                                if (speedSamples.Count >= 2)
+                                {
+                                    var totalBytes = speedSamples.Sum(s => s.bytes);
+                                    var totalTime = (speedSamples.Last().time - speedSamples.First().time).TotalSeconds;
+                                    if (totalTime > 0)
+                                    {
+                                        item.SpeedBytesPerSec = totalBytes / totalTime;
+                                    }
+                                }
+
+                                ItemChanged?.Invoke(item);
+                                lastReport = now;
+                            }
+
+                            SaveMeta(item);
                         }
-
-                        ItemChanged?.Invoke(item);
-                        lastReport = now;
                     }
-
-                    SaveMeta(item);
                 }
-
-                item.SpeedBytesPerSec = 0;
-                item.Status = DownloadStatus.Completed;
-                item.CompletedAt = DateTime.Now;
-                success = true;
 
                 CleanupMeta(item);
-                if (File.Exists(item.TempFilePath))
+                try
                 {
-                    File.Move(item.TempFilePath, item.FilePath, overwrite: true);
-                }
+                    if (File.Exists(item.TempFilePath))
+                    {
+                        File.Move(item.TempFilePath, item.FilePath, overwrite: true);
+                    }
 
-                _logger.Log($"Descarga completada: {item.FileName} ({FormatBytes(item.ReceivedBytes)}).");
-                ItemChanged?.Invoke(item);
+                    item.SpeedBytesPerSec = 0;
+                    item.Status = DownloadStatus.Completed;
+                    item.CompletedAt = DateTime.Now;
+                    success = true;
+
+                    _logger.Log($"Descarga completada: {item.FileName} ({FormatBytes(item.ReceivedBytes)}).");
+                    ItemChanged?.Invoke(item);
+                    break;
+                }
+                catch (Exception moveEx)
+                {
+                    _logger.LogError($"Error guardando archivo {item.FileName}: {moveEx.Message}", moveEx);
+                    item.ErrorMessage = $"Error al guardar: {moveEx.Message}";
+                    CleanupPartialFiles(item);
+                    item.ReceivedBytes = 0;
+                    throw;
+                }
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
