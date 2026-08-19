@@ -8,6 +8,7 @@ public sealed class AppSettings
     public string BackupFolder { get; set; } = string.Empty;
     public string DownloadsFolder { get; set; } = string.Empty;
     public bool CheckUpdatesOnStartup { get; set; }
+    public int MaxBackups { get; set; } = 10;
 
     public string ResolveBackupFolder()
     {
