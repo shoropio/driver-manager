@@ -7,7 +7,6 @@
 ![xUnit](https://img.shields.io/badge/xUnit-Tests-4E7C9F?logo=xunit&logoColor=white)
 ![Inno Setup](https://img.shields.io/badge/Inno%20Setup-Instalador-0080AA)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20x64-lightgrey?logo=windows&logoColor=white)
-![About](https://img.shields.io/badge/About-GitHub-black?logo=github&logoColor=white&link=https://github.com/shoropio)
 ![Release](https://img.shields.io/github/v/release/shoropio/driver-manager?label=release)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
@@ -115,4 +114,4 @@ DriverManager.slnx
 - **CI/CD**: GitHub Actions para build y tests en `windows-latest`. Empaquetado via Inno Setup con code signing opcional.
 - **Uso previsto**: sistema de respaldo completo para gestion de controladores de escritorio. Licencia de uso libre.
 
-(c) 2026 Shoropio Corporation. Todos los derechos reservados.
+© 2026 Shoropio Corporation. Todos los derechos reservados.
