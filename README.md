@@ -1,5 +1,15 @@
 # Driver Manager
 
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-12.0-68217A?logo=csharp&logoColor=white)
+![WPF](https://img.shields.io/badge/WPF-Windows-0078D6?logo=windows&logoColor=white)
+![MVVM](https://img.shields.io/badge/MVVM-Arquitectura-6D28D9)
+![xUnit](https://img.shields.io/badge/xUnit-Tests-4E7C9F?logo=xunit&logoColor=white)
+![Inno Setup](https://img.shields.io/badge/Inno%20Setup-Instalador-0080AA)
+![Platform](https://img.shields.io/badge/Platform-Windows%20x64-lightgrey?logo=windows&logoColor=white)
+![Release](https://img.shields.io/github/v/release/shoropio/driver-manager?label=release)
+![License](https://img.shields.io/github/license/shoropio/driver-manager)
+
 Aplicacion de escritorio en WPF (.NET 10) para gestionar, actualizar, respaldar y restaurar los controladores de un equipo Windows. Interfaz completamente en espanol con tema oscuro.
 
 ## Caracteristicas
