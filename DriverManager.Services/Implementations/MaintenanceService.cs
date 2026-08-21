@@ -172,20 +172,32 @@ public sealed class MaintenanceService : IMaintenanceService
     private void ScanUnsignedDrivers(List<MaintenanceIssue> issues, IReadOnlyList<DriverInfo> installedDrivers, CancellationToken cancellationToken)
     {
         using var searcher = new ManagementObjectSearcher(
-            "SELECT DeviceID, DeviceName, DeviceClass, Manufacturer, InfName, IsSigned FROM Win32_PnPSignedDriver");
+            "SELECT DeviceID, DeviceName, DeviceClass, Manufacturer, InfName FROM Win32_PnPSignedDriver");
 
         foreach (ManagementObject item in searcher.Get())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var isSigned = GetBool(item, "IsSigned");
-            if (isSigned)
+            var deviceName = GetString(item, "DeviceName");
+            if (string.IsNullOrWhiteSpace(deviceName))
             {
                 continue;
             }
 
-            var deviceName = GetString(item, "DeviceName");
-            if (string.IsNullOrWhiteSpace(deviceName))
+            var infName = GetString(item, "InfName");
+            if (string.IsNullOrWhiteSpace(infName))
+            {
+                continue;
+            }
+
+            var driverPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Windows),
+                "INF", infName);
+
+            var isSigned = File.Exists(driverPath) &&
+                File.Exists(driverPath + ".sig");
+
+            if (isSigned)
             {
                 continue;
             }
