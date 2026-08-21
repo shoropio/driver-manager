@@ -98,7 +98,7 @@ public sealed class MaintenanceService : IMaintenanceService
         var brokenErrorCodes = new HashSet<uint> { 1, 3, 10, 12, 14, 18, 19, 24, 28, 31, 32, 37, 39, 40, 43 };
 
         using var searcher = new ManagementObjectSearcher(
-            "SELECT DeviceID, Name, DeviceClass, Manufacturer, ConfigManagerErrorCode FROM Win32_PnPEntity WHERE ConfigManagerErrorCode != 0");
+            "SELECT DeviceID, Name, Manufacturer, ConfigManagerErrorCode FROM Win32_PnPEntity WHERE ConfigManagerErrorCode != 0");
 
         foreach (ManagementObject item in searcher.Get())
         {
@@ -143,7 +143,7 @@ public sealed class MaintenanceService : IMaintenanceService
     private void ScanMissingDrivers(List<MaintenanceIssue> issues, IReadOnlyDictionary<string, uint> errorCodes, CancellationToken cancellationToken)
     {
         using var searcher = new ManagementObjectSearcher(
-            "SELECT DeviceID, Name, DeviceClass, Manufacturer, ConfigManagerErrorCode FROM Win32_PnPEntity WHERE Service IS NULL AND ConfigManagerErrorCode = 24");
+            "SELECT DeviceID, Name, Manufacturer, ConfigManagerErrorCode FROM Win32_PnPEntity WHERE Service IS NULL AND ConfigManagerErrorCode = 24");
 
         foreach (ManagementObject item in searcher.Get())
         {
