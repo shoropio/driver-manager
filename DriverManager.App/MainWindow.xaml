@@ -76,6 +76,13 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="NavMaintenance" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedPage}" Value="Maintenance">
+                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="NavSettings" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SelectedPage}" Value="Settings">
@@ -202,6 +209,16 @@
                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                   VerticalAlignment="Center" />
                             <TextBlock Text="Historial" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavMaintenance}" Margin="0,0,0,8"
+                            Command="{Binding NavigateCommand}" CommandParameter="Maintenance">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconMaintenance}" Width="16" Height="16" Stretch="Uniform"
+                                  StrokeThickness="1.4"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="Mantenimiento" Margin="10,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource NavSettings}" Margin="0,0,0,8"

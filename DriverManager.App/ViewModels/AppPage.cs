@@ -11,5 +11,6 @@ public enum AppPage
     Backups,
     Restore,
     History,
+    Maintenance,
     Settings
 }

@@ -65,6 +65,7 @@ public sealed class MainViewModel : ObservableObject
         Directory.CreateDirectory(stateDir);
         _downloadManager = new DownloadManager(Path.Combine(stateDir, "downloads.json"), 3, _logger);
         DownloadsVM = new DownloadsViewModel(_downloadManager, _logger, downloadsDir);
+        MaintenanceVM = new MaintenanceViewModel(new MaintenanceService(new WmiDriverScanner(), _logger), _updateSource, _logger);
 
         BackupFolder = _settings.ResolveBackupFolder();
         DownloadsFolder = downloadsDir;
@@ -291,6 +292,7 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public DownloadsViewModel DownloadsVM { get; }
+    public MaintenanceViewModel MaintenanceVM { get; }
 
     public string HistoryLog
     {

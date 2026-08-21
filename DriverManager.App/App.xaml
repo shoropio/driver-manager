@@ -59,6 +59,11 @@
                     <views:HistoryView DataContext="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext}" />
                 </DataTemplate>
             </converters:ViewTemplateSelector.HistoryTemplate>
+            <converters:ViewTemplateSelector.MaintenanceTemplate>
+                <DataTemplate>
+                    <views:MaintenanceView DataContext="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext}" />
+                </DataTemplate>
+            </converters:ViewTemplateSelector.MaintenanceTemplate>
             <converters:ViewTemplateSelector.SettingsTemplate>
                 <DataTemplate>
                     <views:SettingsView DataContext="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext}" />
@@ -84,6 +89,7 @@
         <Geometry x:Key="IconSettings">M4 21 v-7 M4 10 V3 M12 21 v-9 M12 8 V3 M20 21 v-5 M20 12 V3 M1 14 h6 M9 8 h6 M17 16 h6</Geometry>
         <Geometry x:Key="IconShield">M12 2 l8 3 v6 c0 5 -3.5 9.5 -8 11 c-4.5 -1.5 -8 -6 -8 -11 V5 Z</Geometry>
         <Geometry x:Key="IconSystem">M2 6 a2 2 0 0 1 2 -2 h16 a2 2 0 0 1 2 2 v9 a2 2 0 0 1 -2 2 H4 a2 2 0 0 1 -2 -2 Z M2 19 h20 M9 16 v3 M15 16 v3</Geometry>
+        <Geometry x:Key="IconMaintenance">M22 12 h-4 l-3 9 L9 3 l-3 9 H2</Geometry>
 
         <Style x:Key="NavButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="White" />

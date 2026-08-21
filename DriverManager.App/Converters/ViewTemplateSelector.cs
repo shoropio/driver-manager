@@ -16,6 +16,7 @@ public class ViewTemplateSelector : DataTemplateSelector
     public DataTemplate BackupsTemplate { get; set; } = null!;
     public DataTemplate RestoreTemplate { get; set; } = null!;
     public DataTemplate HistoryTemplate { get; set; } = null!;
+    public DataTemplate MaintenanceTemplate { get; set; } = null!;
     public DataTemplate SettingsTemplate { get; set; } = null!;
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
@@ -31,6 +32,7 @@ public class ViewTemplateSelector : DataTemplateSelector
             AppPage.Backups => BackupsTemplate,
             AppPage.Restore => RestoreTemplate,
             AppPage.History => HistoryTemplate,
+            AppPage.Maintenance => MaintenanceTemplate,
             AppPage.Settings => SettingsTemplate,
             _ => base.SelectTemplate(item, container)
         };

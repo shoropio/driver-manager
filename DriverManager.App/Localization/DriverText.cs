@@ -96,6 +96,23 @@ public static class DriverText
         _ => "No disponible"
     };
 
+    public static string MaintenanceIssueTypeText(MaintenanceIssueType type) => type switch
+    {
+        MaintenanceIssueType.Obsolete => "Obsoleto",
+        MaintenanceIssueType.Missing => "Faltante",
+        MaintenanceIssueType.Broken => "Con error",
+        MaintenanceIssueType.Unsigned => "Sin firmar",
+        _ => Unknown
+    };
+
+    public static string MaintenanceSeverityText(MaintenanceSeverity severity) => severity switch
+    {
+        MaintenanceSeverity.Critical => "Crítico",
+        MaintenanceSeverity.Warning => "Advertencia",
+        MaintenanceSeverity.Info => "Informativo",
+        _ => Unknown
+    };
+
     public static string FormatSize(long bytes)
     {
         if (bytes <= 0)
