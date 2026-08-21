@@ -93,6 +93,13 @@
                                                     Command="{Binding DataContext.DownloadsVM.ResumeDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding Id}" />
 
+                                            <Button Style="{StaticResource ActionButtonStyle}" Content="Eliminar"
+                                                    FontSize="11" Height="26" Padding="10,0" Margin="4,0,0,0"
+                                                    Foreground="#FFFF6B6B"
+                                                    Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Command="{Binding DataContext.DownloadsVM.RemoveDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Id}" />
+
                                             <Button Style="{StaticResource ActionButtonStyle}" Content="Cancelar"
                                                     FontSize="11" Height="26" Padding="10,0" Margin="4,0,0,0"
                                                     Foreground="#FFFF6B6B"
@@ -161,6 +168,8 @@
                                                        Text="{Binding StatusText}" FontWeight="SemiBold" />
                                             <Button Style="{StaticResource ActionButtonStyle}" Content="Quitar"
                                                     FontSize="11" Height="24" Padding="8,0" Margin="8,0,0,0"
+                                                    Foreground="#FFFF6B6B"
+                                                    Visibility="{Binding IsCancelled, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                     Command="{Binding DataContext.DownloadsVM.RemoveDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding Id}" />
                                         </StackPanel>

@@ -61,7 +61,7 @@
             </converters:ViewTemplateSelector.HistoryTemplate>
             <converters:ViewTemplateSelector.MaintenanceTemplate>
                 <DataTemplate>
-                    <views:MaintenanceView DataContext="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext}" />
+                    <views:MaintenanceView DataContext="{Binding DataContext.MaintenanceVM, RelativeSource={RelativeSource AncestorType=Window}}" />
                 </DataTemplate>
             </converters:ViewTemplateSelector.MaintenanceTemplate>
             <converters:ViewTemplateSelector.SettingsTemplate>

@@ -11,6 +11,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -37,7 +38,11 @@
                     Command="{Binding RepairAllCommand}" Padding="20,0" />
         </Grid>
 
-        <Grid Grid.Row="2" Margin="0,20,0,0">
+        <TextBlock Grid.Row="2" Margin="0,12,0,0" FontSize="13" Foreground="#FFA9ABBE"
+                   Text="{Binding StatusMessage}"
+                   Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+
+        <Grid Grid.Row="3" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="12" />
@@ -86,7 +91,7 @@
             </Border>
         </Grid>
 
-        <Border Grid.Row="3" Margin="0,16,0,0" Style="{StaticResource CardBorderStyle}" Padding="0">
+        <Border Grid.Row="4" Margin="0,16,0,0" Style="{StaticResource CardBorderStyle}" Padding="0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
